@@ -1,19 +1,29 @@
 #!/usr/bin/env sh
 
-# 当发生错误时中止脚本
+# 當發生錯誤時終止
 set -e
 
-# 构建
+# 建構 (把Vue轉成HTML/JS/CSS，並放入dist)
 npm run build
 
-# cd 到构建输出的目录下 
+# save the lastest commit hash as a string
+LOGSTRING=$(git log)
+COMMIT=$(echo $LOGSTRING | awk '{print $2}')
+
+# cd 到建構輸出的目錄下
 cd dist
+
+# 如果要部署到自定義域名
+# echo 'www.example.com' > CNAME
 
 git init
 git add -A
 git commit -m 'deploy'
 
+# 部署到 https://<USERNAME>.github.io
+# git push -f git@github.com:<USERNAME>/<USERNAME>.github.io.git master
+
 # 部署到 https://<USERNAME>.github.io/<REPO>
 git push -f git@github.com:EugenAchtzehn/2021_f2e_attractions.git master:gh-pages
 
-cd -
+cd ..

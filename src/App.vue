@@ -1,12 +1,27 @@
 <template>
     <div id="app" class="container-fluid">
-        <header class="row mt-4 text-center">
-            <img class="top-logo" src="./assets/top-logo.png" alt="Logo on header" />
-            <div class="col-sm-6 mr-auto">Travel Taiwan</div>
-            <div class="col-sm-6 row">
-                <div class="col-4">首頁</div>
-                <div class="col-4">景點導覽</div>
-                <div class="col-4">觀光活動</div>
+        <header class="row">
+            <div
+                class="
+                    col-12 col-md-8
+                    d-flex
+                    align-items-center
+                    justify-content-center justify-content-md-start
+                "
+            >
+                <img class="top-logo" src="./assets/top-logo.png" alt="Logo on header" />
+                <h2 class="title-header">Travel Taiwan</h2>
+            </div>
+            <div class="col-12 col-md-4 row d-flex align-items-center text-center">
+                <div class="col-4">
+                    <a href="#" class="nav-item text-decoration-none">首頁</a>
+                </div>
+                <div class="col-4">
+                    <a href="#" class="nav-item text-decoration-none">景點導覽</a>
+                </div>
+                <div class="col-4">
+                    <a href="#" class="nav-item text-decoration-none">觀光活動</a>
+                </div>
             </div>
         </header>
         <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
@@ -39,6 +54,9 @@ export default {
 
 <style lang="scss">
 @import "~bootstrap/scss/bootstrap";
+#app {
+    font-family: Roboto, Helvetica, Arial, sans-serif;
+}
 .quote-sec {
     height: 330px;
     background-image: url(https://images.unsplash.com/photo-1500534623283-312aade485b7?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80);
@@ -51,14 +69,29 @@ export default {
 .copy-sec {
     font-size: 1.2rem;
     background-color: #08a6bb;
-    font-family: Roboto, Helvetica, Arial, sans-serif;
 }
 header {
     height: 80px;
 }
 .top-logo {
     height: 40px;
-    width: 40px;
+    margin-right: 20px;
+    margin-left: 76px;
+}
+.title-header {
+    font-style: italic;
+    font-weight: 900;
+    font-size: 30px;
+    line-height: 35px;
+    color: #08a6bb;
+}
+.nav-item {
+    color: #525151;
+    font-size: 20px;
+    line-height: 23px;
+}
+.nav-item:hover {
+    color: #08a6bb;
 }
 /* #app {
     font-family: 

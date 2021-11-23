@@ -1,10 +1,10 @@
 <template>
-    <div class="main container-fluid">
+    <div>
         <!-- <h1>{{ msg }}</h1> -->
         <div class="banner-sec">
             <div class="banner-func">
                 <h1 class="banner-title">Welcome to Travel Taiwan</h1>
-                <div class="select-sec d-flex justify-content-center align-items-center">
+                <div class="select-sec d-sm-flex justify-content-center align-items-center">
                     <select
                         name="selectActivity"
                         id="selectActivity"
@@ -33,13 +33,15 @@
                 </div>
             </div>
         </div>
-        <h2 class="pl-4 font-weight-bold">熱門景點</h2>
-        <p class="pl-4 font-weight-bold">
-            台灣的各個美景，都美不勝收。<br />等你一同來發現這座寶島的奧妙！
-        </p>
+        <div class="attract-description">
+            <h2 class="pl-4 font-weight-bold">熱門景點</h2>
+            <p class="pl-4 font-weight-bold">
+                台灣的各個美景，都美不勝收。<br />等你一同來發現這座寶島的奧妙！
+            </p>
+        </div>
         <div class="attract-sec row">
             <div class="col-12 col-sm-3" v-for="item in attractions" :key="item.ID">
-                <div class="attract-item rounded pb-3 mt-5">
+                <div class="attract-item rounded pb-3">
                     <div
                         class="attract-img rounded-top"
                         v-if="item.Picture.PictureUrl1"
@@ -53,15 +55,22 @@
                     ></div>
                     <h3 class="attract-title font-weight-bold pl-3">{{ item.Name }}</h3>
                     <p class="pl-3" v-if="item.City">
-                        <img style="height: 1rem" src="../assets/map-pin.png" alt="map pin" />
+                        <img class="map-pin" src="../assets/map-pin.png" alt="map pin" />
                         {{ item.City }}
                     </p>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <button class="detail-btn btn w-50 text-center py-1">了解更多</button>
+                    </div>
                 </div>
             </div>
         </div>
-        <h2 class="pl-4 font-weight-bold">活動類別</h2>
-        <p class="pl-4 font-weight-bold">各種不同的活動內容<br />邀請您一銅來共襄盛舉！</p>
-        <div class="activities-sec row text-center">
+        <div class="activity-description">
+            <h2 class="pl-4 font-weight-bold">活動類別</h2>
+            <p class="pl-4 font-weight-bold h2-caption">
+                各種不同的活動內容<br />邀請您一銅來共襄盛舉！
+            </p>
+        </div>
+        <div class="activity-sec row text-center">
             <div class="activity-item col-12 col-md-3">
                 <div class="image rounded annual-act"></div>
                 <h3 class="activity-title font-weight-bold">年度活動</h3>
@@ -213,24 +222,58 @@ h2 {
 p {
     color: #aeaeae;
 }
+.map-pin {
+    height: 16px;
+    display: inline-block;
+    padding-bottom: 3px;
+}
 .attract-title,
 .activity-title {
     font-size: 1.2rem;
     margin-top: 1.8rem;
 }
-.attract-sec,
-.activities-sec {
-    margin-top: 4.5rem;
-    margin-bottom: 6rem;
+.attract-description,
+.activity-description {
+    max-width: 95%;
+    margin-left: auto;
+    margin-right: auto;
+}
+.activity-description h2 {
+    margin-top: 2rem;
+}
+.attract-sec {
+    max-width: 95%;
+    margin-top: 3rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 .attract-item {
     background-color: #ffffff;
+    margin-bottom: 90px;
     filter: drop-shadow(0px 4px 15px rgba(0, 0, 0, 0.2));
 }
 .attract-img {
     height: 185px;
     background-size: cover;
     background-position: center;
+}
+.detail-btn {
+    color: #08a6bb;
+    border: 3px solid #08a6bb;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1rem;
+}
+.detail-btn:hover {
+    background-color: #08a6bb;
+    color: #ffffff;
+}
+.activity-sec {
+    max-width: 95%;
+    margin-top: 4.5rem;
+    margin-bottom: 6rem;
+    margin-left: auto;
+    margin-right: auto;
 }
 .activity-item {
     height: 400px;

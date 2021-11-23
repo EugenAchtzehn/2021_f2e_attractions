@@ -1,33 +1,36 @@
 <template>
     <div class="main container-fluid">
         <!-- <h1>{{ msg }}</h1> -->
-        <div class="banner-sec d-flex justify-content-center align-items-center">
-            <div class="select-sec">
-                <select
-                    name="selectActivity"
-                    id="selectActivity"
-                    class="rounded"
-                    @change="getActivity"
-                    v-model="selectedActivity"
-                >
-                    <option value="" disabled>類別</option>
-                    <option :value="activity" v-for="activity in activities" :key="activity">
-                        {{ activity }}
-                    </option>
-                </select>
-                <select
-                    class="rounded"
-                    name="selectCity"
-                    id="selectCity"
-                    @change="getCity"
-                    v-model="selectedCity"
-                >
-                    <option value="" disabled>請選擇縣市</option>
-                    <option :value="city.en" v-for="city in cities" :key="city.zh">
-                        {{ city.zh }}
-                    </option>
-                </select>
-                <button class="rounded">確認</button>
+        <div class="banner-sec">
+            <div class="banner-func">
+                <h1 class="banner-title">Welcome to Travel Taiwan</h1>
+                <div class="select-sec d-flex justify-content-center align-items-center">
+                    <select
+                        name="selectActivity"
+                        id="selectActivity"
+                        class="rounded"
+                        @change="getActivity"
+                        v-model="selectedActivity"
+                    >
+                        <option value="" disabled>類別</option>
+                        <option :value="activity" v-for="activity in activities" :key="activity">
+                            {{ activity }}
+                        </option>
+                    </select>
+                    <select
+                        class="rounded"
+                        name="selectCity"
+                        id="selectCity"
+                        @change="getCity"
+                        v-model="selectedCity"
+                    >
+                        <option value="" disabled>請選擇縣市</option>
+                        <option :value="city.en" v-for="city in cities" :key="city.zh">
+                            {{ city.zh }}
+                        </option>
+                    </select>
+                    <button class="btn-confirm btn rounded" @click="getTDXdata"></button>
+                </div>
             </div>
         </div>
         <h2 class="pl-4 font-weight-bold">熱門景點</h2>
@@ -35,32 +38,43 @@
             台灣的各個美景，都美不勝收。<br />等你一同來發現這座寶島的奧妙！
         </p>
         <div class="attract-sec row">
-            <div
-                class="attract-item col-12 col-sm-3 rounded"
-                v-for="item in attractions"
-                :key="item.ID"
-            >
-                <img :src="item.Picture.PictureUrl1" :alt="item.Picture.PictureDescription1" />
-                <h3 class="attract-title font-weight-bold pl-3">{{ item.Name }}</h3>
-                <p class="pl-3">{{ item.City }}</p>
+            <div class="col-12 col-sm-3" v-for="item in attractions" :key="item.ID">
+                <div class="attract-item rounded pb-3 mt-5">
+                    <div
+                        class="attract-img rounded-top"
+                        v-if="item.Picture.PictureUrl1"
+                        :style="{ backgroundImage: `url(${item.Picture.PictureUrl1})` }"
+                    ></div>
+                    <!-- 沒有圖片則載入預設圖片 -->
+                    <div
+                        v-else
+                        class="attract-img rounded-top"
+                        :style="{ backgroundImage: `url(${defaultImageUrl})` }"
+                    ></div>
+                    <h3 class="attract-title font-weight-bold pl-3">{{ item.Name }}</h3>
+                    <p class="pl-3" v-if="item.City">
+                        <img style="height: 1rem" src="../assets/map-pin.png" alt="map pin" />
+                        {{ item.City }}
+                    </p>
+                </div>
             </div>
         </div>
         <h2 class="pl-4 font-weight-bold">活動類別</h2>
         <p class="pl-4 font-weight-bold">各種不同的活動內容<br />邀請您一銅來共襄盛舉！</p>
         <div class="activities-sec row text-center">
-            <div class="activity-item col-12 col-sm-3">
+            <div class="activity-item col-12 col-md-3">
                 <div class="image rounded annual-act"></div>
                 <h3 class="activity-title font-weight-bold">年度活動</h3>
             </div>
-            <div class="activity-item col-12 col-sm-3">
+            <div class="activity-item col-12 col-md-3">
                 <div class="image rounded art-act"></div>
                 <h3 class="activity-title font-weight-bold">藝文活動</h3>
             </div>
-            <div class="activity-item col-12 col-sm-3">
+            <div class="activity-item col-12 col-md-3">
                 <div class="image rounded festival"></div>
                 <h3 class="activity-title font-weight-bold">節慶活動</h3>
             </div>
-            <div class="activity-item col-12 col-sm-3">
+            <div class="activity-item col-12 col-md-3">
                 <div class="image rounded others"></div>
                 <h3 class="activity-title font-weight-bold">其他</h3>
             </div>
@@ -72,14 +86,15 @@
 import jsSHA from "jssha";
 
 export default {
-    name: "HelloWorld",
-    props: {
-        msg: String,
-    },
+    name: "MainContent",
+    // props: {
+    //     msg: String,
+    // },
     data() {
         return {
             selectedActivity: "",
-            selectedCity: "",
+            selectedCity: "all",
+            // 預設載入台中景點
             activities: ["所有類別", "遊憩類", "自然風景類", "體育健身類", "古蹟類"],
             cities: [
                 { zh: "所有縣市", en: "all" },
@@ -107,6 +122,7 @@ export default {
                 { zh: "連江縣", en: "LienchiangCounty" },
             ],
             attractions: [],
+            defaultImageUrl: `https://images.unsplash.com/photo-1553531889-3836a7ee6d3f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1160&q=80`,
         };
     },
     methods: {
@@ -127,7 +143,13 @@ export default {
         },
         getTDXdata() {
             const vm = this;
-            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot/Taipei?$top=8&$format=JSON`;
+            let city = vm.selectedCity;
+            if (city === "all") {
+                city = ``;
+                // 若選擇所有縣市，則為空白字串
+            }
+            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot/${city}?$top=8&$format=JSON`;
+            console.log("請求URL：", url);
             vm.axios
                 .get(url, { headers: this.getAuthorizationHeader() })
                 .then((response) => {
@@ -152,6 +174,23 @@ export default {
     background-image: url(https://images.unsplash.com/photo-1552083375-1447ce886485?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80);
     background-position: center;
     background-size: cover;
+    position: relative;
+}
+.banner-func {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+.banner-title {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+    font-weight: 700;
+    color: #ffffff;
+    font-size: 3rem;
+    line-height: 3.5rem;
+    text-shadow: 10px 8px 12px rgba(0, 0, 0, 0.37);
 }
 .select-sec select {
     width: 190px;
@@ -159,10 +198,13 @@ export default {
     text-align: center;
     margin-right: 1.2rem;
 }
-/* .select-sec button {
+.btn-confirm {
+    background-image: url(../assets/bx-search.png);
+    background-position: center;
+    background-size: cover;
     height: 42px;
     width: 42px;
-} */
+}
 h2 {
     font-size: 1.875rem;
     color: #08a6bb;
@@ -171,25 +213,24 @@ h2 {
 p {
     color: #aeaeae;
 }
-.main {
-    /* background-color: #e5e5e5; */
-}
 .attract-title,
 .activity-title {
     font-size: 1.2rem;
     margin-top: 1.8rem;
 }
+.attract-sec,
 .activities-sec {
     margin-top: 4.5rem;
     margin-bottom: 6rem;
 }
 .attract-item {
     background-color: #ffffff;
-    /* max-width: 100%; */
-}
-.attract-item img {
     filter: drop-shadow(0px 4px 15px rgba(0, 0, 0, 0.2));
-    height: 200px;
+}
+.attract-img {
+    height: 185px;
+    background-size: cover;
+    background-position: center;
 }
 .activity-item {
     height: 400px;
@@ -212,9 +253,4 @@ p {
 .others {
     background-image: url(https://images.unsplash.com/photo-1526666923127-b2970f64b422?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80);
 }
-
-/* height: 325px; */
-/* .activity-item img {
-    max-width: 100%;
-} */
 </style>

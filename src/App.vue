@@ -1,6 +1,7 @@
 <template>
     <div id="app" class="container-fluid">
         <header class="row mt-4 text-center">
+            <img class="top-logo" src="./assets/top-logo.png" alt="Logo on header" />
             <div class="col-sm-6 mr-auto">Travel Taiwan</div>
             <div class="col-sm-6 row">
                 <div class="col-4">首頁</div>
@@ -9,7 +10,8 @@
             </div>
         </header>
         <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
-        <HelloWorld msg="Welcome to Vue CLI" />
+        <!-- <HelloWorld msg="Welcome to Vue CLI" /> -->
+        <MainContent msg="Welcome to Vue CLI" />
         <footer>
             <div class="quote-sec d-flex justify-content-center align-items-center">
                 <h3 class="font-weight-bold text-white text-center">
@@ -25,12 +27,12 @@
 </template>
 
 <script>
-import HelloWorld from "./components/HelloWorld.vue";
+import MainContent from "./components/MainContent.vue";
 
 export default {
     name: "App",
     components: {
-        HelloWorld,
+        MainContent,
     },
 };
 </script>
@@ -50,6 +52,13 @@ export default {
     font-size: 1.2rem;
     background-color: #08a6bb;
     font-family: Roboto, Helvetica, Arial, sans-serif;
+}
+header {
+    height: 80px;
+}
+.top-logo {
+    height: 40px;
+    width: 40px;
 }
 /* #app {
     font-family: 

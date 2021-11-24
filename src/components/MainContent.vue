@@ -9,7 +9,6 @@
                         name="selectActivity"
                         id="selectActivity"
                         class="rounded"
-                        @change="getActivity"
                         v-model="selectedActivity"
                     >
                         <option value="" disabled>類別</option>
@@ -21,7 +20,6 @@
                         class="rounded"
                         name="selectCity"
                         id="selectCity"
-                        @change="getCity"
                         v-model="selectedCity"
                     >
                         <option value="" disabled>請選擇縣市</option>
@@ -54,7 +52,15 @@
                         :style="{ backgroundImage: `url(${defaultImageUrl})` }"
                     ></div>
                     <h3 class="attract-title font-weight-bold pl-3">{{ item.Name }}</h3>
-                    <p class="pl-3" v-if="item.City">
+                    <p class="pl-3" v-if="item.OpenTime">
+                        <img class="clock" src="../assets/clock.png" alt="clock" />
+                        {{ item.OpenTime }}
+                    </p>
+                    <p class="pl-3" v-if="item.Address">
+                        <img class="map-pin" src="../assets/map-pin.png" alt="map pin" />
+                        {{ item.Address }}
+                    </p>
+                    <p class="pl-3" v-else>
                         <img class="map-pin" src="../assets/map-pin.png" alt="map pin" />
                         {{ item.City }}
                     </p>
@@ -101,7 +107,7 @@ export default {
     // },
     data() {
         return {
-            selectedActivity: "",
+            selectedActivity: "所有類別",
             selectedCity: "all",
             // 預設載入台中景點
             activities: ["所有類別", "遊憩類", "自然風景類", "體育健身類", "古蹟類"],
@@ -135,8 +141,7 @@ export default {
         };
     },
     methods: {
-        getActivity() {},
-        getCity() {},
+        // getActivityType() {},
         getAuthorizationHeader() {
             const AppID = "e966312d4abd46fbbe1d4748dd4d71d5";
             const AppKey = "46Va5HzlLVj6YLoZOXWCGzfBts8";
@@ -154,10 +159,21 @@ export default {
             const vm = this;
             let city = vm.selectedCity;
             if (city === "all") {
-                city = ``;
                 // 若選擇所有縣市，則為空白字串
+                city = ``;
+            } else {
+                city = `/${city}`;
             }
-            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot/${city}?$top=8&$format=JSON`;
+            let activityType = vm.selectedActivity;
+            if (activityType === "所有類別") {
+                // 選擇所有類別
+                activityType = ``;
+            } else {
+                // 對Class1做活動類別篩選，結尾須帶&串接其他Odata條件
+                activityType = `$filter=Class1%20eq%20'${activityType}'%20or%20Class2%20eq%20'${activityType}'%20or%20Class3%20eq%20'${activityType}'&`;
+            }
+            // ?做為所有Odata條件的起頭，$為單一Odata條件的起頭
+            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot${city}?${activityType}$top=8&$format=JSON`;
             console.log("請求URL：", url);
             vm.axios
                 .get(url, { headers: this.getAuthorizationHeader() })
@@ -221,6 +237,9 @@ h2 {
 }
 p {
     color: #aeaeae;
+}
+.clock {
+    height: 1rem;
 }
 .map-pin {
     height: 16px;

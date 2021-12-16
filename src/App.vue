@@ -29,8 +29,6 @@
             </div>
         </header>
         <!-- <img alt="Vue logo" src="./assets/logo.png" /> -->
-        <!-- <HelloWorld msg="Welcome to Vue CLI" /> -->
-
         <!-- 渲染 route 的位置 -->
         <router-view></router-view>
         <!-- <MainContent msg="Welcome to Vue CLI" /> -->

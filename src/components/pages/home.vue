@@ -109,8 +109,27 @@ export default {
         return {
             selectedActivity: "所有類別",
             selectedCity: "all",
-            // 預設載入台中景點
-            activities: ["所有類別", "遊憩類", "自然風景類", "體育健身類", "古蹟類"],
+            activities: [
+                "所有類別",
+                "遊憩類",
+                "自然風景類",
+                "生態類",
+                "國家風景區類",
+                "國家公園類",
+                "都會公園類",
+                "森林遊樂區類",
+                "林場類",
+                "體育健身類",
+                "古蹟類",
+                "廟宇類",
+                "溫泉類",
+                "觀光工廠類",
+                "休閒農業類",
+                "小吃/特產類",
+                "文化類",
+                "藝術類",
+                "其他",
+            ],
             cities: [
                 { zh: "所有縣市", en: "all" },
                 { zh: "臺北市", en: "Taipei" },
@@ -169,8 +188,8 @@ export default {
                 // 選擇所有類別
                 activityType = ``;
             } else {
-                // 對Class1做活動類別篩選，結尾須帶&串接其他Odata條件
-                activityType = `$filter=Class1%20eq%20'${activityType}'%20or%20Class2%20eq%20'${activityType}'%20or%20Class3%20eq%20'${activityType}'&`;
+                // 對Class1, Class2, Class3做活動類別篩選，結尾須帶&串接其他Odata條件
+                activityType = `$filter=Class1 eq '${activityType}' or Class2 eq '${activityType}' or Class3 eq '${activityType}'&`;
             }
             // ?做為所有Odata條件的起頭，$為單一Odata條件的起頭
             const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot${city}?${activityType}$top=8&$format=JSON`;
@@ -185,9 +204,32 @@ export default {
                     console.log("failed");
                 });
         },
+        getUniqueTypes() {
+            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot?$select=Class1,Class2,Class3&$format=JSON`;
+            const vm = this;
+            vm.axios
+                .get(url, { headers: this.getAuthorizationHeader() })
+                .then((res) => {
+                    const resAry = res.data;
+                    const hasClass1Ary = resAry.filter((el) => {
+                        return el.Class1;
+                    });
+                    // 填有 Class1 資料的成為新陣列 hasClass1Ary
+                    const classTypes = hasClass1Ary.map((el) => {
+                        return el.Class1;
+                    });
+                    // 抽出 Class1，形成新陣列 classTypes
+                    const uniqueTypes = classTypes.filter(
+                        (element, index) => classTypes.indexOf(element) === index
+                    );
+                    console.log(`Class1有這${uniqueTypes.length}種: `, uniqueTypes);
+                })
+                .catch(() => console.log("failed"));
+        },
     },
     created() {
         this.getTDXdata();
+        this.getUniqueTypes();
     },
 };
 </script>

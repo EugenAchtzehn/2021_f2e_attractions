@@ -50,11 +50,14 @@
                         class="act-img rounded-top"
                         :style="{ backgroundImage: `url(${defaultImageUrl})` }"
                     ></div>
-                    <h3 class="act-title font-weight-bold pl-3">{{ act.Name }}</h3>
-                    <!-- <p class="pl-3" v-if="act.StartTime">
-                        <img class="clock" src="@/assets/clock.png" alt="clock" />
-                        {{ act.StartTime }}
-                    </p> -->
+                    <h3 class="act-title font-weight-bold pl-3">{{ act.ActivityName }}</h3>
+                    <p class="pl-3">
+                        <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
+                        <span v-if="act.StartTime">{{ formatTime(act.StartTime) }}</span>
+                        <br />
+                        <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
+                        <span v-if="act.EndTime">{{ formatTime(act.EndTime) }}</span>
+                    </p>
 
                     <p class="pl-3" v-if="act.Address">
                         <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
@@ -119,7 +122,7 @@ export default {
             ],
             theCityObj: {},
             acts: [],
-            defaultImageUrl: `https://images.unsplash.com/photo-1523606772308-64a28db0ef2c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80`,
+            defaultImageUrl: `https://images.unsplash.com/photo-1523606772308-64a28db0ef2c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80`,
         };
     },
     methods: {
@@ -151,17 +154,36 @@ export default {
             } else {
                 activityType = `$filter=Class1 eq '${activityType}' or Class2 eq '${activityType}'&`;
             }
-            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Activity${city}?${activityType}$top=8&$format=JSON`;
+            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Activity${city}?${activityType}$top=12&$format=JSON`;
             console.log("請求URL：", url);
             vm.axios
                 .get(url, { headers: this.getAuthorizationHeader() })
                 .then((response) => {
-                    console.log(response);
+                    // console.log(response);
                     vm.acts = response.data;
                 })
                 .catch(() => {
                     console.log("failed");
                 });
+        },
+        formatTime(inputTime) {
+            const d = new Date(inputTime);
+            // console.log("Date物件", d);
+            function addDigit(time) {
+                if (time < 10) {
+                    return `0${time}`;
+                } else {
+                    return time;
+                }
+            }
+            const monthNum = d.getMonth() + 1;
+            const dateNum = d.getDate();
+            const hourNum = d.getHours();
+            const minuteNum = d.getMinutes();
+            return (
+                `${d.getFullYear()}/${addDigit(monthNum)}/${addDigit(dateNum)} ` +
+                `${addDigit(hourNum)}:${addDigit(minuteNum)}`
+            );
         },
     },
     computed: {
@@ -187,7 +209,7 @@ export default {
 <style scoped>
 .banner-sec {
     height: 600px;
-    background-image: url(https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80);
+    background-image: url(https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
     background-position: center;
     background-size: cover;
     position: relative;

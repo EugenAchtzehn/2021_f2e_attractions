@@ -38,7 +38,7 @@
             </p>
         </div>
         <div class="attract-sec row">
-            <div class="col-12 col-sm-3" v-for="item in attractions" :key="item.ID">
+            <div class="col-12 col-sm-3" v-for="(item, index) in attractions" :key="item.ID">
                 <div class="attract-item rounded pb-3">
                     <div
                         class="attract-img rounded-top"
@@ -51,8 +51,10 @@
                         class="attract-img rounded-top"
                         :style="{ backgroundImage: `url(${defaultImageUrl})` }"
                     ></div>
-                    <h3 class="attract-title font-weight-bold pl-3">{{ item.Name }}</h3>
-                    <p class="pl-3" v-if="item.OpenTime">
+                    <h3 class="attract-title font-weight-bold pl-3">
+                        {{ item.ScenicSpotName }}
+                    </h3>
+                    <p class="pl-3 pt-3" v-if="item.OpenTime">
                         <img class="clock" src="@/assets/clock.png" alt="clock" />
                         {{ item.OpenTime }}
                     </p>
@@ -65,11 +67,88 @@
                         {{ item.City }}
                     </p>
                     <div class="d-flex justify-content-center align-items-center">
-                        <button class="detail-btn btn w-50 text-center py-1">了解更多</button>
+                        <button
+                            type="button"
+                            class="detail-btn btn w-50 text-center py-1"
+                            @click="getAttractDetails(index)"
+                            data-toggle="modal"
+                            data-target="#spotModal"
+                        >
+                            了解更多
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- the Modal component made by Bootstrap 4 -->
+        <div class="modal fade" id="spotModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header px-5">
+                        <h5 class="modal-title" id="modalLabel">
+                            {{ checkAttract.ScenicSpotName }}
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src="@/assets/dismiss.png" alt="dismiss-button" />
+                        </button>
+                    </div>
+                    <div class="modal-body px-5">
+                        <p class="modal-address" v-if="checkAttract.Address">
+                            <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
+                            {{ checkAttract.Address }}
+                        </p>
+                        <p class="modal-address" v-else>
+                            <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
+                            {{ checkAttract.City }}
+                        </p>
+                        <p class="modal-text">
+                            {{ checkAttract.DescriptionDetail }}
+                        </p>
+                        <img
+                            v-if="checkAttract.Picture.PictureUrl1"
+                            class="modal-img"
+                            :src="checkAttract.Picture.PictureUrl1"
+                            :alt="checkAttract.Picture.PictureDescription1"
+                        />
+                        <img
+                            v-else
+                            class="modal-img"
+                            src="https://images.unsplash.com/photo-1553531889-3836a7ee6d3f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
+                            alt="image not available"
+                        />
+                        <div class="row pb-4 modal-btm-info">
+                            <div class="col">
+                                <img src="@/assets/open-time.png" alt="open-time" />
+                                {{ checkAttract.OpenTime }}
+                            </div>
+                            <div class="col" v-if="checkAttract.TicketInfo">
+                                <img src="@/assets/ticket.png" alt="ticket" />
+                                {{ checkAttract.TicketInfo }}
+                            </div>
+                            <div class="col">
+                                <img src="@/assets/phone.png" alt="phone" />
+                                <!-- 消除電話都是 886 國際碼起頭的狀況 -->
+                                {{ "0" + checkAttract.Phone.substring(4) }}
+                            </div>
+                            <div class="col" v-if="checkAttract.Class1">
+                                <img src="@/assets/category.png" alt="category" />
+                                {{ checkAttract.Class1 }}
+                                <br />
+                                <span class="other-class">
+                                    {{ checkAttract.Class2 }}
+                                </span>
+                                <br />
+                                <span class="other-class">
+                                    {{ checkAttract.Class3 }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="activity-description">
             <h2 class="pl-4 font-weight-bold">活動類別</h2>
             <p class="pl-4 font-weight-bold h2-caption">
@@ -156,8 +235,16 @@ export default {
                 { zh: "連江縣", en: "LienchiangCounty" },
             ],
             attractions: [],
-            defaultImageUrl: `https://images.unsplash.com/photo-1553531889-3836a7ee6d3f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1160&q=80`,
+            defaultImageUrl: `https://images.unsplash.com/photo-1553531889-3836a7ee6d3f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80`,
             searchImageUrl: ``,
+            // 儲存要查詢的景點物件，讓 modal 顯示
+            checkAttract: {
+                Picture: {
+                    PictureUrl1: "",
+                    PictureDescription1: "",
+                },
+                Phone: "",
+            },
         };
     },
     methods: {
@@ -192,7 +279,7 @@ export default {
                 activityType = `$filter=Class1 eq '${activityType}' or Class2 eq '${activityType}' or Class3 eq '${activityType}'&`;
             }
             // ?做為所有Odata條件的起頭，$為單一Odata條件的起頭
-            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot${city}?${activityType}$top=8&$format=JSON`;
+            const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/ScenicSpot${city}?${activityType}$top=12&$format=JSON`;
             console.log("請求URL：", url);
             vm.axios
                 .get(url, { headers: this.getAuthorizationHeader() })
@@ -226,10 +313,13 @@ export default {
                 })
                 .catch(() => console.log("failed"));
         },
+        getAttractDetails(index) {
+            this.checkAttract = this.attractions[index];
+        },
     },
     created() {
         this.getTDXdata();
-        this.getUniqueTypes();
+        // this.getUniqueTypes();
     },
 };
 </script>
@@ -238,7 +328,7 @@ export default {
 <style scoped>
 .banner-sec {
     height: 600px;
-    background-image: url(https://images.unsplash.com/photo-1552083375-1447ce886485?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=870&q=80);
+    background-image: url(https://images.unsplash.com/photo-1552083375-1447ce886485?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
     background-position: center;
     background-size: cover;
     position: relative;
@@ -318,6 +408,31 @@ p {
     background-size: cover;
     background-position: center;
 }
+.modal-address {
+    color: #6f7789;
+    font-size: 14px;
+    line-height: 16px;
+}
+.modal-text {
+    color: #6f7789;
+    line-height: 1.5rem;
+}
+.modal-img {
+    object-fit: cover;
+    object-position: center;
+    max-width: 100%;
+    display: block;
+    margin: 1.5rem auto 3rem auto;
+}
+.modal-btm-info {
+    line-height: 1.5rem;
+    vertical-align: middle;
+    font-weight: 700;
+    color: #08a6bb;
+}
+.other-class {
+    padding: 1.5rem;
+}
 .detail-btn {
     color: #08a6bb;
     border: 3px solid #08a6bb;
@@ -346,15 +461,15 @@ p {
     filter: drop-shadow(0px 4px 15px rgba(0, 0, 0, 0.2));
 }
 .annual-act {
-    background-image: url(https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=873&q=80);
+    background-image: url(https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80);
 }
 .art-act {
-    background-image: url(https://images.unsplash.com/photo-1540809799-78dbc7a3746d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=359&q=80);
+    background-image: url(https://images.unsplash.com/photo-1540809799-78dbc7a3746d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80);
 }
 .festival {
-    background-image: url(https://images.unsplash.com/photo-1527286607633-84a4b8297928?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1964&q=80);
+    background-image: url(https://images.unsplash.com/photo-1527286607633-84a4b8297928?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80);
 }
 .others {
-    background-image: url(https://images.unsplash.com/photo-1526666923127-b2970f64b422?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80);
+    background-image: url(https://images.unsplash.com/photo-1526666923127-b2970f64b422?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=400&q=80);
 }
 </style>

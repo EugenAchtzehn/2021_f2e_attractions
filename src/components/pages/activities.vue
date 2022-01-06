@@ -37,7 +37,7 @@
             </p>
         </div>
         <div class="act-sec row">
-            <div class="col-12 col-sm-3" v-for="act in acts" :key="act.ActivityID">
+            <div class="col-12 col-sm-3" v-for="(act, index) in acts" :key="act.ActivityID">
                 <div class="act-item rounded pb-3">
                     <div
                         class="act-img rounded-top"
@@ -53,10 +53,10 @@
                     <h3 class="act-title font-weight-bold pl-3">{{ act.ActivityName }}</h3>
                     <p class="pl-3">
                         <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
-                        <span v-if="act.StartTime">{{ formatTime(act.StartTime) }}</span>
+                        <span v-if="act.StartTime">開始：{{ formatTime(act.StartTime) }}</span>
                         <br />
                         <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
-                        <span v-if="act.EndTime">{{ formatTime(act.EndTime) }}</span>
+                        <span v-if="act.EndTime">結束：{{ formatTime(act.EndTime) }}</span>
                     </p>
 
                     <p class="pl-3" v-if="act.Address">
@@ -68,7 +68,83 @@
                         {{ act.Location }}
                     </p>
                     <div class="d-flex justify-content-center align-items-center">
-                        <button class="detail-btn btn w-50 text-center py-1">了解更多</button>
+                        <button
+                            type="button"
+                            class="detail-btn btn w-50 text-center py-1"
+                            @click="getActDetails(index)"
+                            data-toggle="modal"
+                            data-target="#actModal"
+                        >
+                            了解更多
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- the Modal component made by Bootstrap 4 -->
+        <div class="modal fade" id="actModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header px-5">
+                        <h5 class="modal-title" id="modalLabel">
+                            {{ checkAct.ActivityName }}
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <img src="@/assets/dismiss.png" alt="dismiss-button" />
+                        </button>
+                    </div>
+                    <div class="modal-body px-5">
+                        <p class="modal-address" v-if="checkAct.Address">
+                            <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
+                            {{ checkAct.Address }}
+                        </p>
+                        <p class="modal-address" v-else>
+                            <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
+                            {{ checkAct.Location }}
+                        </p>
+                        <p class="modal-text">
+                            {{ checkAct.Description }}
+                        </p>
+                        <img
+                            v-if="checkAct.Picture.PictureUrl1"
+                            class="modal-img"
+                            :src="checkAct.Picture.PictureUrl1"
+                            :alt="checkAct.Picture.PictureDescription1"
+                        />
+                        <img
+                            v-else
+                            class="modal-img"
+                            src="https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
+                            alt="image not available"
+                            style="height"
+                        />
+                        <div class="row pb-4 modal-btm-info">
+                            <!-- 因資料內容可能不完整，四欄資訊都加上 v-if，確保有資料才顯示 -->
+                            <div class="col" v-if="checkAct.StartTime">
+                                <img src="@/assets/open-time.png" alt="start-time" />
+                                活動開始： <br />
+                                {{ formatTime(checkAct.StartTime) }}
+                            </div>
+                            <div class="col" v-if="checkAct.EndTime">
+                                <img src="@/assets/open-time.png" alt="end-time" />
+                                活動結束：<br />
+                                {{ formatTime(checkAct.EndTime) }}
+                            </div>
+                            <div class="col" v-if="checkAct.Phone">
+                                <img src="@/assets/phone.png" alt="phone" />
+                                <!-- 消除電話都是 886- 國際碼起頭的狀況 -->
+                                {{ "0" + checkAct.Phone.substring(4) }}
+                            </div>
+                            <div class="col" v-if="checkAct.Class1">
+                                <img src="@/assets/category.png" alt="category" />
+                                {{ checkAct.Class1 }}
+                                <br />
+                                <span class="other-class">
+                                    {{ checkAct.Class2 }}
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -120,9 +196,15 @@ export default {
                 { zh: "澎湖縣", en: "PenghuCounty" },
                 { zh: "連江縣", en: "LienchiangCounty" },
             ],
-            theCityObj: {},
+            // theCityObj: {},
             acts: [],
-            defaultImageUrl: `https://images.unsplash.com/photo-1523606772308-64a28db0ef2c?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80`,
+            defaultImageUrl: `https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80`,
+            checkAct: {
+                Picture: {
+                    PictureUrl1: "",
+                    PictureDescription: "",
+                },
+            },
         };
     },
     methods: {
@@ -184,6 +266,9 @@ export default {
                 `${d.getFullYear()}/${addDigit(monthNum)}/${addDigit(dateNum)} ` +
                 `${addDigit(hourNum)}:${addDigit(minuteNum)}`
             );
+        },
+        getActDetails(index) {
+            this.checkAct = this.acts[index];
         },
     },
     computed: {
@@ -294,5 +379,30 @@ p {
 .detail-btn:hover {
     background-color: #08a6bb;
     color: #ffffff;
+}
+.modal-address {
+    color: #6f7789;
+    font-size: 14px;
+    line-height: 16px;
+}
+.modal-text {
+    color: #6f7789;
+    line-height: 1.5rem;
+}
+.modal-img {
+    object-fit: cover;
+    object-position: center;
+    max-width: 100%;
+    display: block;
+    margin: 1.5rem auto 3rem auto;
+}
+.modal-btm-info {
+    line-height: 1.5rem;
+    vertical-align: middle;
+    font-weight: 700;
+    color: #08a6bb;
+}
+.other-class {
+    padding: 1.5rem;
 }
 </style>

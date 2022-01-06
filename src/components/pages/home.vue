@@ -114,11 +114,12 @@
                         <img
                             v-else
                             class="modal-img"
-                            src="https://images.unsplash.com/photo-1553531889-3836a7ee6d3f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
+                            src="https://images.unsplash.com/photo-1625913938746-013adcccbc72?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
                             alt="image not available"
                         />
                         <div class="row pb-4 modal-btm-info">
-                            <div class="col">
+                            <!-- 因資料內容可能不完整，四欄資訊都加上 v-if，確保有資料才顯示 -->
+                            <div class="col" v-if="checkAttract.OpenTime">
                                 <img src="@/assets/open-time.png" alt="open-time" />
                                 {{ checkAttract.OpenTime }}
                             </div>
@@ -126,9 +127,9 @@
                                 <img src="@/assets/ticket.png" alt="ticket" />
                                 {{ checkAttract.TicketInfo }}
                             </div>
-                            <div class="col">
+                            <div class="col" v-if="checkAttract.Phone">
                                 <img src="@/assets/phone.png" alt="phone" />
-                                <!-- 消除電話都是 886 國際碼起頭的狀況 -->
+                                <!-- 消除電話都是 886- 國際碼起頭的狀況 -->
                                 {{ "0" + checkAttract.Phone.substring(4) }}
                             </div>
                             <div class="col" v-if="checkAttract.Class1">
@@ -235,8 +236,7 @@ export default {
                 { zh: "連江縣", en: "LienchiangCounty" },
             ],
             attractions: [],
-            defaultImageUrl: `https://images.unsplash.com/photo-1553531889-3836a7ee6d3f?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=400&q=80`,
-            searchImageUrl: ``,
+            defaultImageUrl: `https://images.unsplash.com/photo-1625913938746-013adcccbc72?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80`,
             // 儲存要查詢的景點物件，讓 modal 顯示
             checkAttract: {
                 Picture: {

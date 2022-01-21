@@ -204,9 +204,9 @@
 
 <script>
 import jsSHA from "jssha";
+
 // import L from "leaflet";
 import { LMap, LTileLayer, LMarker } from "vue2-leaflet";
-
 // 處理 webpack 造成 marker 圖示遺失的問題
 import { Icon } from "leaflet";
 delete Icon.Default.prototype._getIconUrl;
@@ -289,7 +289,7 @@ export default {
                     PositionLat: "",
                     PositionLon: "",
                 },
-                Phone: "",
+                // Phone: "",
             },
             maps: {
                 url: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`,
@@ -373,8 +373,7 @@ export default {
                 () => {
                     //mapObject is a property that is part of leaflet
                     this.$refs.attractMap.mapObject.invalidateSize();
-                },
-                // 100 不行，200 可以
+                }, // 100 不行，200 可以
                 200
             );
         },

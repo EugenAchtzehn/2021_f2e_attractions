@@ -71,7 +71,10 @@
                         <button
                             type="button"
                             class="detail-btn btn w-50 text-center py-1"
-                            @click="getActDetails(index)"
+                            @click="
+                                getActDetails(index);
+                                getMapSize();
+                            "
                             data-toggle="modal"
                             data-target="#actModal"
                         >
@@ -119,6 +122,24 @@
                             alt="image not available"
                             style="height"
                         />
+                        <l-map
+                            :zoom="maps.zoom"
+                            :center="[checkAct.Position.PositionLat, checkAct.Position.PositionLon]"
+                            ref="actMap"
+                            class="mb-5"
+                            style="height: 300px"
+                        >
+                            <l-tile-layer
+                                :url="maps.url"
+                                :attribution="maps.attribution"
+                            ></l-tile-layer>
+                            <l-marker
+                                :lat-lng="[
+                                    checkAct.Position.PositionLat,
+                                    checkAct.Position.PositionLon,
+                                ]"
+                            ></l-marker>
+                        </l-map>
                         <div class="row pb-4 modal-btm-info">
                             <!-- 因資料內容可能不完整，四欄資訊都加上 v-if，確保有資料才顯示 -->
                             <div class="col" v-if="checkAct.StartTime">
@@ -154,8 +175,25 @@
 <script>
 import jsSHA from "jssha";
 
+// import L from "leaflet";
+import { LMap, LTileLayer, LMarker } from "vue2-leaflet";
+// 處理 webpack 造成 marker 圖示遺失的問題
+import { Icon } from "leaflet";
+delete Icon.Default.prototype._getIconUrl;
+Icon.Default.mergeOptions({
+    iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+    iconUrl: require("leaflet/dist/images/marker-icon.png"),
+    shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+});
+
 export default {
     name: "Activities",
+    // register leaflet component locally
+    components: {
+        LMap,
+        LTileLayer,
+        LMarker,
+    },
     data() {
         return {
             selectedType: "所有類別",
@@ -196,7 +234,6 @@ export default {
                 { zh: "澎湖縣", en: "PenghuCounty" },
                 { zh: "連江縣", en: "LienchiangCounty" },
             ],
-            // theCityObj: {},
             acts: [],
             defaultImageUrl: `https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80`,
             checkAct: {
@@ -204,6 +241,15 @@ export default {
                     PictureUrl1: "",
                     PictureDescription: "",
                 },
+                Position: {
+                    PositionLat: "",
+                    PositionLon: "",
+                },
+            },
+            maps: {
+                url: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`,
+                attribution: `&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors`,
+                zoom: 15,
             },
         };
     },
@@ -269,6 +315,11 @@ export default {
         },
         getActDetails(index) {
             this.checkAct = this.acts[index];
+        },
+        getMapSize() {
+            setTimeout(() => {
+                this.$refs.actMap.mapObject.invalidateSize();
+            }, 200);
         },
     },
     computed: {

@@ -54,15 +54,15 @@
                     <h3 class="attract-title font-weight-bold pl-3">
                         {{ item.ScenicSpotName }}
                     </h3>
-                    <p class="pl-3 pt-3" v-if="item.OpenTime">
+                    <p class="px-3 pt-3" v-if="item.OpenTime">
                         <img class="clock" src="@/assets/clock.png" alt="clock" />
                         {{ item.OpenTime }}
                     </p>
-                    <p class="pl-3" v-if="item.Address">
+                    <p class="px-3" v-if="item.Address">
                         <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
                         {{ item.Address }}
                     </p>
-                    <p class="pl-3" v-else>
+                    <p class="px-3" v-else>
                         <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
                         {{ item.City }}
                     </p>
@@ -70,7 +70,10 @@
                         <button
                             type="button"
                             class="detail-btn btn w-50 text-center py-1"
-                            @click="getAttractDetails(index)"
+                            @click="
+                                getAttractDetails(index);
+                                getMapSize();
+                            "
                             data-toggle="modal"
                             data-target="#spotModal"
                         >
@@ -117,6 +120,28 @@
                             src="https://images.unsplash.com/photo-1625913938746-013adcccbc72?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
                             alt="image not available"
                         />
+                        <l-map
+                            :zoom="maps.zoom"
+                            :center="[
+                                checkAttract.Position.PositionLat,
+                                checkAttract.Position.PositionLon,
+                            ]"
+                            ref="attractMap"
+                            class="mb-5"
+                            style="height: 300px"
+                        >
+                            <l-tile-layer
+                                :url="maps.url"
+                                :attribution="maps.attribution"
+                            ></l-tile-layer>
+                            <l-marker
+                                :lat-lng="[
+                                    checkAttract.Position.PositionLat,
+                                    checkAttract.Position.PositionLon,
+                                ]"
+                            ></l-marker>
+                        </l-map>
+
                         <div class="row pb-4 modal-btm-info">
                             <!-- 因資料內容可能不完整，四欄資訊都加上 v-if，確保有資料才顯示 -->
                             <div class="col" v-if="checkAttract.OpenTime">
@@ -179,12 +204,29 @@
 
 <script>
 import jsSHA from "jssha";
+// import L from "leaflet";
+import { LMap, LTileLayer, LMarker } from "vue2-leaflet";
+
+// 處理 webpack 造成 marker 圖示遺失的問題
+import { Icon } from "leaflet";
+delete Icon.Default.prototype._getIconUrl;
+Icon.Default.mergeOptions({
+    iconRetinaUrl: require("leaflet/dist/images/marker-icon-2x.png"),
+    iconUrl: require("leaflet/dist/images/marker-icon.png"),
+    shadowUrl: require("leaflet/dist/images/marker-shadow.png"),
+});
 
 export default {
     name: "Home",
     // props: {
     //     msg: String,
     // },
+    // locally register component
+    components: {
+        LMap,
+        LTileLayer,
+        LMarker,
+    },
     data() {
         return {
             selectedActivity: "所有類別",
@@ -243,7 +285,16 @@ export default {
                     PictureUrl1: "",
                     PictureDescription1: "",
                 },
+                Position: {
+                    PositionLat: "",
+                    PositionLon: "",
+                },
                 Phone: "",
+            },
+            maps: {
+                url: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`,
+                attribution: `&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors`,
+                zoom: 15,
             },
         };
     },
@@ -315,6 +366,17 @@ export default {
         },
         getAttractDetails(index) {
             this.checkAttract = this.attractions[index];
+        },
+        getMapSize() {
+            // console.log("this.$refs.attractMap.mapObject", this.$refs.attractMap);
+            setTimeout(
+                () => {
+                    //mapObject is a property that is part of leaflet
+                    this.$refs.attractMap.mapObject.invalidateSize();
+                },
+                // 100 不行，200 可以
+                200
+            );
         },
     },
     created() {
@@ -423,6 +485,9 @@ p {
     max-width: 100%;
     display: block;
     margin: 1.5rem auto 3rem auto;
+}
+.modalmap {
+    display: none;
 }
 .modal-btm-info {
     line-height: 1.5rem;

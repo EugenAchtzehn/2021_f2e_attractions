@@ -396,7 +396,7 @@ export default {
     animation-name: bannerAnimation;
     animation-duration: 20s;
     animation-iteration-count: infinite;
-    animation-timing-function: linear;
+    /* animation-timing-function: linear; */
 }
 .banner-func {
     position: absolute;
@@ -545,13 +545,14 @@ p {
     0% {
         background-image: url(https://images.unsplash.com/photo-1630244024081-dc4039254a46?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
     }
-    25% {
+    40% {
         background-image: url(https://images.unsplash.com/photo-1630244024081-dc4039254a46?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
     }
+    /* 變換背景時間縮短在 10% 內 */
     50% {
         background-image: url(https://images.unsplash.com/photo-1625913938746-013adcccbc72?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
     }
-    75% {
+    90% {
         background-image: url(https://images.unsplash.com/photo-1625913938746-013adcccbc72?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
     }
     to {

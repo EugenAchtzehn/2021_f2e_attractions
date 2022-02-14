@@ -2,8 +2,8 @@
     <div>
         <!-- <h1>{{ msg }}</h1> -->
         <ul class="banner-sec">
-            <li class="first-banner"></li>
             <li class="second-banner"></li>
+            <li class="first-banner"></li>
             <div class="banner-func">
                 <h1 class="banner-title">Welcome to Travel Taiwan</h1>
                 <div class="select-sec d-sm-flex justify-content-center align-items-center">
@@ -403,17 +403,17 @@ export default {
     background-position: center;
     background-size: cover;
 }
-/* 底層為清水斷崖 */
-.first-banner {
-    background-image: url(https://images.unsplash.com/photo-1625913938746-013adcccbc72?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
-}
 /* 先浮現龜山島 */
-.second-banner {
+.first-banner {
     background-image: url(https://images.unsplash.com/photo-1630244024081-dc4039254a46?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
     animation-name: bannerAnimation;
     animation-duration: 20s;
     animation-iteration-count: infinite;
     /* animation-timing-function: linear; */
+}
+/* 底層為清水斷崖 */
+.second-banner {
+    background-image: url(https://images.unsplash.com/photo-1625913938746-013adcccbc72?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
 }
 .banner-func {
     position: absolute;

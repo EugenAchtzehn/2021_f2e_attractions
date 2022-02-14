@@ -1,6 +1,8 @@
 <template>
     <div>
-        <div class="banner-sec">
+        <ul class="banner-sec">
+            <li class="second-banner"></li>
+            <li class="first-banner"></li>
             <div class="banner-func">
                 <h1 class="banner-title">Welcome to Travel Taiwan</h1>
                 <div class="select-sec d-sm-flex justify-content-center align-items-center">
@@ -29,7 +31,7 @@
                     <button class="btn-confirm btn rounded" @click="getTDXdata"></button>
                 </div>
             </div>
-        </div>
+        </ul>
         <div class="act-description">
             <h2 class="pl-4 font-weight-bold">{{ currentCounty }}活動</h2>
             <p class="pl-4 font-weight-bold">
@@ -345,10 +347,26 @@ export default {
 <style scoped>
 .banner-sec {
     height: 600px;
-    background-image: url(https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
+    position: relative;
+}
+.banner-sec > li {
+    list-style: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
     background-position: center;
     background-size: cover;
-    position: relative;
+}
+.first-banner {
+    background-image: url(https://images.unsplash.com/photo-1565468893023-6183eb37f35d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
+    animation-name: bannerAnimation;
+    animation-duration: 20s;
+    animation-iteration-count: infinite;
+}
+.second-banner {
+    background-image: url(https://images.unsplash.com/photo-1604029969271-2d61f0182334?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
 }
 .banner-func {
     position: absolute;
@@ -455,5 +473,23 @@ p {
 }
 .other-class {
     padding: 1.5rem;
+}
+@keyframes bannerAnimation {
+    0% {
+        opacity: 1;
+    }
+    35% {
+        opacity: 1;
+    }
+    /* 變換背景時間縮短在 15% 內，50% - 85% 是第二張圖 */
+    50% {
+        opacity: 0;
+    }
+    85% {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 </style>

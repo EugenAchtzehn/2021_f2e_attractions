@@ -409,7 +409,7 @@ export default {
     animation-name: bannerAnimation;
     animation-duration: 20s;
     animation-iteration-count: infinite;
-    /* animation-timing-function: linear; */
+    animation-timing-function: linear;
 }
 /* 底層為清水斷崖 */
 .second-banner {
@@ -562,14 +562,14 @@ p {
     0% {
         opacity: 1;
     }
-    35% {
+    40% {
         opacity: 1;
     }
-    /* 變換背景時間縮短在 15% 內，50% - 85% 是第二張圖 */
+    /* 變換背景時間縮短在 10% 內，50% - 90% 是第二張圖 */
     50% {
         opacity: 0;
     }
-    85% {
+    90% {
         opacity: 0;
     }
     to {

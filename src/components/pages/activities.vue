@@ -364,6 +364,7 @@ export default {
     animation-name: bannerAnimation;
     animation-duration: 20s;
     animation-iteration-count: infinite;
+    animation-timing-function: linear;
 }
 .second-banner {
     background-image: url(https://images.unsplash.com/photo-1604029969271-2d61f0182334?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
@@ -478,14 +479,14 @@ p {
     0% {
         opacity: 1;
     }
-    35% {
+    40% {
         opacity: 1;
     }
-    /* 變換背景時間縮短在 15% 內，50% - 85% 是第二張圖 */
+    /* 變換背景時間縮短在 10% 內，50% - 90% 是第二張圖 */
     50% {
         opacity: 0;
     }
-    85% {
+    90% {
         opacity: 0;
     }
     to {

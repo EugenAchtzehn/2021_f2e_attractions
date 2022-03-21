@@ -6,12 +6,6 @@
       <div class="banner-func">
         <h1 class="banner-title">Welcome to Travel Taiwan</h1>
         <div class="select-sec d-sm-flex justify-content-center align-items-center">
-          <select name="selectType" id="selectType" class="rounded" v-model="selectedType">
-            <option value="" disabled>類別</option>
-            <option :value="type" v-for="type in types" :key="type">
-              {{ type }}
-            </option>
-          </select>
           <select class="rounded" name="selectCity" id="selectCity" v-model="selectedCity">
             <option value="" disabled>請選擇縣市</option>
             <option :value="city.en" v-for="city in cities" :key="city.zh">
@@ -22,53 +16,43 @@
         </div>
       </div>
     </ul>
-    <div class="act-description">
-      <h2 class="pl-4 font-weight-bold">{{ currentCounty }}活動</h2>
+    <div class="bike-description">
+      <h2 class="pl-4 font-weight-bold">
+        {{ currentCounty }}路網
+        <!-- {{ cities.find((city) => city.en === selectedCity).zh }}路網 -->
+      </h2>
       <p class="pl-4 font-weight-bold">
         台灣的各個美景，都美不勝收。<br />等你一同來發現這座寶島的奧妙！
       </p>
     </div>
-    <div class="act-sec row">
-      <div class="col-12 col-sm-3" v-for="(act, index) in acts" :key="act.ActivityID">
-        <div class="act-item rounded pb-3">
-          <div
-            class="act-img rounded-top"
-            v-if="act.Picture.PictureUrl1"
-            :style="{ backgroundImage: `url(${act.Picture.PictureUrl1})` }"
-          ></div>
-          <!-- 沒有圖片則載入預設圖片 -->
-          <div
-            v-else
-            class="act-img rounded-top"
-            :style="{ backgroundImage: `url(${defaultImageUrl})` }"
-          ></div>
-          <h3 class="act-title font-weight-bold pl-3">{{ act.ActivityName }}</h3>
-          <p class="pl-3">
-            <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
-            <span v-if="act.StartTime">開始：{{ formatTime(act.StartTime) }}</span>
-            <br />
-            <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
-            <span v-if="act.EndTime">結束：{{ formatTime(act.EndTime) }}</span>
-          </p>
-
-          <p class="pl-3" v-if="act.Address">
+    <div class="bike-sec row">
+      <div class="col-12 col-sm-3" v-for="(item, index) in routes" :key="item.ID">
+        <div class="bike-item rounded py-3">
+          <h3 class="bike-title font-weight-bold pl-3">
+            {{ item.RouteName }}
+          </h3>
+          <!-- <p class="px-3 pt-3" v-if="item.OpenTime">
+            <img class="clock" src="@/assets/clock.png" alt="clock" />
+            {{ item.OpenTime }}
+          </p> -->
+          <p class="px-3">
             <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-            {{ act.Address }}
+            起點：{{ item.RoadSectionStart || '無提供' }}
           </p>
-          <p class="pl-3" v-else>
+          <p class="px-3">
             <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-            {{ act.Location }}
+            終點：{{ item.RoadSectionEnd || '無提供' }}
           </p>
           <div class="d-flex justify-content-center align-items-center">
             <button
               type="button"
               class="detail-btn btn w-50 text-center py-1"
               @click="
-                getActDetails(index);
+                getRouteDetails(index);
                 getMapSize();
               "
               data-toggle="modal"
-              data-target="#actModal"
+              data-target="#bikeModal"
             >
               了解更多
             </button>
@@ -78,7 +62,7 @@
     </div>
 
     <!-- the Modal component made by Bootstrap 4 -->
-    <div class="modal fade" id="actModal" tabindex="-1" role="dialog">
+    <div class="modal fade" id="bikeModal" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header px-5">
@@ -160,9 +144,8 @@
 </template>
 <script>
 import jsSHA from 'jssha';
-
 // import L from "leaflet";
-import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
+// import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
 // 處理 webpack 造成 marker 圖示遺失的問題
 import { Icon } from 'leaflet';
 delete Icon.Default.prototype._getIconUrl;
@@ -173,30 +156,17 @@ Icon.Default.mergeOptions({
 });
 
 export default {
-  name: 'Activities',
-  // register leaflet component locally
+  name: 'bikes',
   components: {
-    LMap,
-    LTileLayer,
-    LMarker,
+    // LMap,
+    // LTileLayer,
+    // LMarker,
   },
   data() {
     return {
-      selectedType: '所有類別',
-      selectedCity: 'all',
-      types: [
-        '所有類別',
-        '年度活動',
-        '節慶活動',
-        '藝文活動',
-        '遊憩活動',
-        '自行車活動',
-        '產業文化活動',
-        '活動快報',
-        '其他',
-      ],
+      // 必選，且不可一次取得全國，因此預設為'Taipei'
+      selectedCity: 'Taipei',
       cities: [
-        { zh: '所有縣市', en: 'all' },
         { zh: '臺北市', en: 'Taipei' },
         { zh: '新北市', en: 'NewTaipei' },
         { zh: '桃園市', en: 'Taoyuan' },
@@ -218,25 +188,9 @@ export default {
         { zh: '臺東縣', en: 'TaitungCounty' },
         { zh: '金門縣', en: 'KinmenCounty' },
         { zh: '澎湖縣', en: 'PenghuCounty' },
-        { zh: '連江縣', en: 'LienchiangCounty' },
       ],
-      acts: [],
-      defaultImageUrl: `https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80`,
-      checkAct: {
-        Picture: {
-          PictureUrl1: '',
-          PictureDescription: '',
-        },
-        Position: {
-          PositionLat: '',
-          PositionLon: '',
-        },
-      },
-      maps: {
-        url: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`,
-        attribution: `&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors`,
-        zoom: 15,
-      },
+      routes: [],
+      defaultImageUrl: ``,
     };
   },
   methods: {
@@ -256,70 +210,25 @@ export default {
     getTDXdata() {
       const vm = this;
       let city = vm.selectedCity;
-      if (city === 'all') {
-        // 若選擇所有縣市，則為空白字串
-        city = ``;
-      } else {
-        city = `/${city}`;
-      }
-      let activityType = vm.selectedType;
-      if (activityType === '所有類別') {
-        activityType = ``;
-      } else {
-        activityType = `$filter=Class1 eq '${activityType}' or Class2 eq '${activityType}'&`;
-      }
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Activity${city}?${activityType}$top=12&$format=JSON`;
-      console.log('請求URL：', url);
+      console.log('City: ', city);
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${city}?$top=12&$format=JSON`;
       vm.axios
         .get(url, { headers: this.getAuthorizationHeader() })
-        .then((response) => {
-          // console.log(response);
-          vm.acts = response.data;
+        .then((res) => {
+          console.log(res.data);
+          vm.routes = res.data;
         })
-        .catch(() => {
-          console.log('failed');
-        });
-    },
-    formatTime(inputTime) {
-      const d = new Date(inputTime);
-      // console.log("Date物件", d);
-      function addDigit(time) {
-        if (time < 10) {
-          return `0${time}`;
-        } else {
-          return time;
-        }
-      }
-      const monthNum = d.getMonth() + 1;
-      const dateNum = d.getDate();
-      const hourNum = d.getHours();
-      const minuteNum = d.getMinutes();
-      return (
-        `${d.getFullYear()}/${addDigit(monthNum)}/${addDigit(dateNum)} ` +
-        `${addDigit(hourNum)}:${addDigit(minuteNum)}`
-      );
-    },
-    getActDetails(index) {
-      this.checkAct = this.acts[index];
-    },
-    getMapSize() {
-      setTimeout(() => {
-        this.$refs.actMap.mapObject.invalidateSize();
-      }, 200);
+        .catch(() => console.error('cannot get TDX data'));
     },
   },
   computed: {
     currentCounty() {
       const vm = this;
-      if (vm.selectedCity === 'all') {
-        return '熱門';
-      } else {
-        let theCityObj = vm.cities.find((city) => {
-          // 找出被選擇的城市物件
-          return city.en === vm.selectedCity;
-        });
-        return theCityObj.zh;
-      }
+      // 找出 cities 中，英文名等同 selectedCity 的城市的中文名
+      let theCityObj = vm.cities.find((city) => {
+        return city.en === vm.selectedCity;
+      });
+      return theCityObj.zh;
     },
   },
   created() {
@@ -327,7 +236,6 @@ export default {
   },
 };
 </script>
-
 <style scoped>
 .banner-sec {
   height: 600px;
@@ -344,14 +252,14 @@ export default {
   background-size: cover;
 }
 .first-banner {
-  background-image: url(https://images.unsplash.com/photo-1565468893023-6183eb37f35d?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
+  background-image: url(https://images.unsplash.com/photo-1599637840048-00ee815f0c8b?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
   animation-name: bannerAnimation;
   animation-duration: 20s;
   animation-iteration-count: infinite;
   animation-timing-function: linear;
 }
 .second-banner {
-  background-image: url(https://images.unsplash.com/photo-1604029969271-2d61f0182334?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
+  background-image: url(https://images.unsplash.com/photo-1605235456285-1f8de0d1e097?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1600&q=80);
 }
 .banner-func {
   position: absolute;
@@ -390,38 +298,34 @@ h2 {
 p {
   color: #aeaeae;
 }
-.clock {
+/* .clock {
   height: 1rem;
-}
+} */
 .map-pin {
   height: 16px;
   display: inline-block;
   padding-bottom: 3px;
 }
-.act-title {
+/* attract 通通改為 bike */
+.bike-title {
   font-size: 1.2rem;
   margin-top: 1.8rem;
 }
-.act-description {
+.bike-description {
   max-width: 95%;
   margin-left: auto;
   margin-right: auto;
 }
-.act-sec {
+.bike-sec {
   max-width: 95%;
   margin-top: 3rem;
   margin-left: auto;
   margin-right: auto;
 }
-.act-item {
+.bike-item {
   background-color: #ffffff;
   margin-bottom: 90px;
   filter: drop-shadow(0px 4px 15px rgba(0, 0, 0, 0.2));
-}
-.act-img {
-  height: 185px;
-  background-size: cover;
-  background-position: center;
 }
 .detail-btn {
   color: #08a6bb;
@@ -434,31 +338,7 @@ p {
   background-color: #08a6bb;
   color: #ffffff;
 }
-.modal-address {
-  color: #6f7789;
-  font-size: 14px;
-  line-height: 16px;
-}
-.modal-text {
-  color: #6f7789;
-  line-height: 1.5rem;
-}
-.modal-img {
-  object-fit: cover;
-  object-position: center;
-  max-width: 100%;
-  display: block;
-  margin: 1.5rem auto 3rem auto;
-}
-.modal-btm-info {
-  line-height: 1.5rem;
-  vertical-align: middle;
-  font-weight: 700;
-  color: #08a6bb;
-}
-.other-class {
-  padding: 1.5rem;
-}
+
 @keyframes bannerAnimation {
   0% {
     opacity: 1;

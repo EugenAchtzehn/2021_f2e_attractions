@@ -1,5 +1,12 @@
 <template>
   <div>
+    <button @click="getPosition" class="btn btn-primary">取得當下位置</button>
+    <div style="height: 450px">
+      <l-map :zoom="maps.zoom" :center="[25.08, 121.54]" class="mb-5" style="height: 450px">
+        <l-tile-layer :url="maps.url" :attribution="maps.attribution"></l-tile-layer>
+        <l-geo-json :geojson="geoJsonExample"></l-geo-json>
+      </l-map>
+    </div>
     <ul class="banner-sec">
       <li class="second-banner"></li>
       <li class="first-banner"></li>
@@ -67,72 +74,66 @@
         <div class="modal-content">
           <div class="modal-header px-5">
             <h5 class="modal-title" id="modalLabel">
-              {{ checkAct.ActivityName }}
+              {{ checkRoute.RouteName }}
             </h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <img src="@/assets/dismiss.png" alt="dismiss-button" />
             </button>
           </div>
           <div class="modal-body px-5">
-            <p class="modal-address" v-if="checkAct.Address">
+            <!-- <p class="modal-address" v-if="checkAct.Address">
               <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
               {{ checkAct.Address }}
             </p>
             <p class="modal-address" v-else>
               <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
               {{ checkAct.Location }}
-            </p>
-            <p class="modal-text">
-              {{ checkAct.Description }}
-            </p>
-            <img
-              v-if="checkAct.Picture.PictureUrl1"
-              class="modal-img"
-              :src="checkAct.Picture.PictureUrl1"
-              :alt="checkAct.Picture.PictureDescription1"
-            />
-            <img
-              v-else
-              class="modal-img"
-              src="https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80"
-              alt="image not available"
-              style="height"
-            />
+            </p> -->
+            <!-- <p class="modal-text">
+              {{ checkRoute.Description }}
+            </p> -->
             <l-map
               :zoom="maps.zoom"
-              :center="[checkAct.Position.PositionLat, checkAct.Position.PositionLon]"
-              ref="actMap"
+              :center="[
+                checkRoute.geojson.features[0].geometry.coordinates[0][0][1],
+                checkRoute.geojson.features[0].geometry.coordinates[0][0][0],
+              ]"
+              ref="bikeMap"
               class="mb-5"
               style="height: 300px"
             >
               <l-tile-layer :url="maps.url" :attribution="maps.attribution"></l-tile-layer>
               <l-marker
-                :lat-lng="[checkAct.Position.PositionLat, checkAct.Position.PositionLon]"
+                :lat-lng="[
+                  checkRoute.geojson.features[0].geometry.coordinates[0][0][1],
+                  checkRoute.geojson.features[0].geometry.coordinates[0][0][0],
+                ]"
               ></l-marker>
+              <l-geo-json :geojson="checkRoute.geojson"></l-geo-json>
             </l-map>
             <div class="row pb-4 modal-btm-info">
               <!-- 因資料內容可能不完整，四欄資訊都加上 v-if，確保有資料才顯示 -->
-              <div class="col" v-if="checkAct.StartTime">
+              <div class="col" v-if="checkRoute.StartTime">
                 <img src="@/assets/open-time.png" alt="start-time" />
                 活動開始： <br />
-                {{ formatTime(checkAct.StartTime) }}
+                {{ formatTime(checkRoute.StartTime) }}
               </div>
-              <div class="col" v-if="checkAct.EndTime">
+              <div class="col" v-if="checkRoute.EndTime">
                 <img src="@/assets/open-time.png" alt="end-time" />
                 活動結束：<br />
-                {{ formatTime(checkAct.EndTime) }}
+                {{ formatTime(checkRoute.EndTime) }}
               </div>
-              <div class="col" v-if="checkAct.Phone">
+              <div class="col" v-if="checkRoute.Phone">
                 <img src="@/assets/phone.png" alt="phone" />
                 <!-- 消除電話都是 886- 國際碼起頭的狀況 -->
-                {{ '0' + checkAct.Phone.substring(4) }}
+                {{ '0' + checkRoute.Phone.substring(4) }}
               </div>
-              <div class="col" v-if="checkAct.Class1">
+              <div class="col" v-if="checkRoute.Class1">
                 <img src="@/assets/category.png" alt="category" />
-                {{ checkAct.Class1 }}
+                {{ checkRoute.Class1 }}
                 <br />
                 <span class="other-class">
-                  {{ checkAct.Class2 }}
+                  {{ checkRoute.Class2 }}
                 </span>
               </div>
             </div>
@@ -145,7 +146,7 @@
 <script>
 import jsSHA from 'jssha';
 // import L from "leaflet";
-// import { LMap, LTileLayer, LMarker } from 'vue2-leaflet';
+import { LMap, LTileLayer, LMarker, LGeoJson } from 'vue2-leaflet';
 // 處理 webpack 造成 marker 圖示遺失的問題
 import { Icon } from 'leaflet';
 delete Icon.Default.prototype._getIconUrl;
@@ -154,16 +155,41 @@ Icon.Default.mergeOptions({
   iconUrl: require('leaflet/dist/images/marker-icon.png'),
   shadowUrl: require('leaflet/dist/images/marker-shadow.png'),
 });
+import wicket from 'wicket';
 
 export default {
   name: 'bikes',
   components: {
-    // LMap,
-    // LTileLayer,
-    // LMarker,
+    LMap,
+    LTileLayer,
+    LMarker,
+    LGeoJson,
   },
   data() {
     return {
+      geoJsonExample: {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {
+              type: 'MultiLineString',
+              coordinates: [
+                // 第一組線段
+                [
+                  [121.54, 25.08],
+                  [121.541, 25.081],
+                ],
+                // 第二組線段
+                [
+                  [121.545, 25.082],
+                  [121.545, 25.081],
+                ],
+              ],
+            },
+          },
+        ],
+      },
       // 必選，且不可一次取得全國，因此預設為'Taipei'
       selectedCity: 'Taipei',
       cities: [
@@ -190,7 +216,30 @@ export default {
         { zh: '澎湖縣', en: 'PenghuCounty' },
       ],
       routes: [],
-      defaultImageUrl: ``,
+      checkRoute: {
+        geojson: {
+          type: 'FeatureCollection',
+          features: [
+            {
+              type: 'Feature',
+              geometry: {
+                type: 'MultiLineString',
+                coordinates: [
+                  [
+                    [0, 0],
+                    [0, 1],
+                  ],
+                ],
+              },
+            },
+          ],
+        },
+      },
+      maps: {
+        url: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`,
+        attribution: `&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors`,
+        zoom: 14,
+      },
     };
   },
   methods: {
@@ -220,6 +269,55 @@ export default {
         })
         .catch(() => console.error('cannot get TDX data'));
     },
+    getRouteDetails(index) {
+      const vm = this;
+      vm.checkRoute = vm.routes[index];
+      // 重新建立 GeoJSON 結構
+      vm.checkRoute.geojson = {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            geometry: {},
+          },
+        ],
+      };
+      // 呼叫 convertWkt() 函數會得到 geometry 轉成 GeoJSON 的回傳，並將其放到 checkRoute 中等待顯示
+      vm.checkRoute.geojson.features[0].geometry = vm.convertWkt(vm.checkRoute.Geometry);
+      console.log('vm.checkRoute.geojson: ', vm.checkRoute.geojson);
+    },
+    getMapSize() {
+      setTimeout(() => {
+        this.$refs.bikeMap.mapObject.invalidateSize();
+      }, 200);
+    },
+    convertWkt(geometry) {
+      const wkt = new wicket.Wkt();
+      // 需要先讀入 WKT 到 wkt，再轉成 JSON 的程序
+      const geoJsonFeature = wkt.read(geometry).toJson();
+      // console.log('geoJsonFeature', geoJsonFeature);
+      return geoJsonFeature;
+    },
+    getPosition() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function (position) {
+            const longitude = position.coords.longitude; // 取得經度
+            const latitude = position.coords.latitude; // 取得緯度
+            console.log(longitude, latitude);
+            // mymap.setView([latitude, longitude], 13); // 重新設定初始位置
+            // getStationData(longitude, latitude); // 將經緯度傳給 getStationData 執行
+          },
+          // 錯誤訊息
+          function (e) {
+            const errCode = e.code;
+            const errMsg = e.message;
+            console.error(errCode);
+            console.error(errMsg);
+          }
+        );
+      }
+    },
   },
   computed: {
     currentCounty() {
@@ -230,6 +328,10 @@ export default {
       });
       return theCityObj.zh;
     },
+    // getMiddlePoint(){
+    //   const aryLength = this.checkRoute.geojson.features[0].geometry.coordinates[0].length;
+    //   return (aryLength / 2) - 1;
+    // },
   },
   created() {
     this.getTDXdata();

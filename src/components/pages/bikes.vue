@@ -1,12 +1,5 @@
 <template>
   <div>
-    <button @click="getPosition" class="btn btn-primary">取得當下位置</button>
-    <div style="height: 450px">
-      <l-map :zoom="maps.zoom" :center="[25.08, 121.54]" class="mb-5" style="height: 450px">
-        <l-tile-layer :url="maps.url" :attribution="maps.attribution"></l-tile-layer>
-        <l-geo-json :geojson="geoJsonExample"></l-geo-json>
-      </l-map>
-    </div>
     <ul class="banner-sec">
       <li class="second-banner"></li>
       <li class="first-banner"></li>
@@ -33,8 +26,8 @@
       </p>
     </div>
     <div class="bike-sec row">
-      <div class="col-12 col-sm-3" v-for="(item, index) in routes" :key="item.ID">
-        <div class="bike-item rounded py-3">
+      <div class="col-5 col-sm-4">
+        <div class="bike-item rounded py-3" v-for="(item, index) in routes" :key="item.ID">
           <h3 class="bike-title font-weight-bold pl-3">
             {{ item.RouteName }}
           </h3>
@@ -66,6 +59,49 @@
           </div>
         </div>
       </div>
+      <div class="col-7 col-sm-8 map-container">
+        <l-map
+          :zoom="16"
+          :center="[currentPos.lat, currentPos.lng]"
+          class="mb-5"
+          style="height: 450px"
+        >
+          <l-tile-layer :url="maps.url" :attribution="maps.attribution"></l-tile-layer>
+          <l-marker :lat-lng="[currentPos.lat, currentPos.lng]">
+            <l-icon :icon-url="icon.positionUrl" :icon-size="[32, 32]"></l-icon>
+            <l-popup>
+              <p>目前位置</p>
+            </l-popup>
+          </l-marker>
+          <l-marker
+            v-for="(stn, index) in stnAvailability"
+            :key="stn.StationUID"
+            :lat-lng="[
+              stnAvailability[index].StationPosition.PositionLat,
+              stnAvailability[index].StationPosition.PositionLon,
+            ]"
+          >
+            <l-icon :icon-url="icon.bikeUrl" :icon-size="[40, 40]" />
+            <l-popup>
+              <p>站名：{{ stnAvailability[index].StationName.Zh_tw }}</p>
+              <p>地址：{{ stnAvailability[index].StationAddress.Zh_tw }}</p>
+              <p>可借車數：{{ stnAvailability[index].AvailableRentBikes }}</p>
+              <p>可還空位：{{ stnAvailability[index].AvailableReturnBikes }}</p>
+            </l-popup>
+          </l-marker>
+          <!-- <l-geo-json :geojson="geoJsonExample"></l-geo-json> -->
+        </l-map>
+        <button @click="getPosAndNearBikes" class="btn btn-primary">取得當下位置</button>
+        <!-- <button @click="getNearBikes(currentPos.lng, currentPos.lat)" class="btn btn-primary ml-3">
+          取得附近站位
+        </button>
+        <button
+          @click="getStationInfo(currentPos.lng, currentPos.lat)"
+          class="btn btn-primary ml-3"
+        >
+          取得站位資料
+        </button> -->
+      </div>
     </div>
 
     <!-- the Modal component made by Bootstrap 4 -->
@@ -93,7 +129,7 @@
               {{ checkRoute.Description }}
             </p> -->
             <l-map
-              :zoom="maps.zoom"
+              :zoom="16"
               :center="[
                 checkRoute.geojson.features[0].geometry.coordinates[0][0][1],
                 checkRoute.geojson.features[0].geometry.coordinates[0][0][0],
@@ -108,8 +144,18 @@
                   checkRoute.geojson.features[0].geometry.coordinates[0][0][1],
                   checkRoute.geojson.features[0].geometry.coordinates[0][0][0],
                 ]"
-              ></l-marker>
-              <l-geo-json :geojson="checkRoute.geojson"></l-geo-json>
+              >
+                <l-icon :icon-url="icon.startUrl" :icon-size="icon.iconSize"></l-icon>
+              </l-marker>
+              <l-marker
+                :lat-lng="[
+                  checkRoute.geojson.features[0].geometry.coordinates[0][endIndex][1],
+                  checkRoute.geojson.features[0].geometry.coordinates[0][endIndex][0],
+                ]"
+              >
+                <l-icon :icon-url="icon.endUrl" :icon-size="icon.iconSize"></l-icon>
+              </l-marker>
+              <l-geo-json :geojson="checkRoute.geojson" :options-style="lineStyle"></l-geo-json>
             </l-map>
             <div class="row pb-4 modal-btm-info">
               <!-- 因資料內容可能不完整，四欄資訊都加上 v-if，確保有資料才顯示 -->
@@ -146,7 +192,7 @@
 <script>
 import jsSHA from 'jssha';
 // import L from "leaflet";
-import { LMap, LTileLayer, LMarker, LGeoJson } from 'vue2-leaflet';
+import { LMap, LTileLayer, LMarker, LGeoJson, LPopup, LIcon } from 'vue2-leaflet';
 // 處理 webpack 造成 marker 圖示遺失的問題
 import { Icon } from 'leaflet';
 delete Icon.Default.prototype._getIconUrl;
@@ -164,6 +210,8 @@ export default {
     LTileLayer,
     LMarker,
     LGeoJson,
+    LPopup,
+    LIcon,
   },
   data() {
     return {
@@ -200,7 +248,6 @@ export default {
         { zh: '臺南市', en: 'Tainan' },
         { zh: '高雄市', en: 'Kaohsiung' },
         { zh: '基隆市', en: 'Keelung' },
-        { zh: '新竹市', en: 'Hsinchu' },
         { zh: '新竹縣', en: 'HsinchuCounty' },
         { zh: '苗栗縣', en: 'MiaoliCounty' },
         { zh: '彰化縣', en: 'ChanghuaCounty' },
@@ -235,6 +282,37 @@ export default {
           ],
         },
       },
+      currentPos: {
+        // 預設為台灣地理中心點
+        lng: 120.9798,
+        lat: 23.9739,
+      },
+      icon: {
+        positionUrl: require('@/assets/position.png'),
+        bikeUrl: require('@/assets/bike.png'),
+        startUrl: require('@/assets/start.png'),
+        endUrl: require('@/assets/end.png'),
+        iconSize: [44, 44],
+      },
+      lineStyle: {
+        color: '#007F77',
+        // stroke width in pixels
+        weight: '8',
+      },
+      nearStations: [],
+      stnAvailability: [
+        {
+          AvailableRentBikes: '',
+          AvailableReturnBikes: '',
+          StationPosition: { PositionLat: '', PositionLon: '' },
+          StationName: {
+            Zh_tw: '',
+          },
+          StationAddress: {
+            Zh_tw: '',
+          },
+        },
+      ],
       maps: {
         url: `https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png`,
         attribution: `&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors`,
@@ -259,12 +337,12 @@ export default {
     getTDXdata() {
       const vm = this;
       let city = vm.selectedCity;
-      console.log('City: ', city);
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${city}?$top=12&$format=JSON`;
+      // console.log('City: ', city);
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${city}?$top=10&$format=JSON`;
       vm.axios
         .get(url, { headers: this.getAuthorizationHeader() })
         .then((res) => {
-          console.log(res.data);
+          // console.log(res.data);
           vm.routes = res.data;
         })
         .catch(() => console.error('cannot get TDX data'));
@@ -299,24 +377,78 @@ export default {
       return geoJsonFeature;
     },
     getPosition() {
+      const vm = this;
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
-          function (position) {
-            const longitude = position.coords.longitude; // 取得經度
-            const latitude = position.coords.latitude; // 取得緯度
-            console.log(longitude, latitude);
-            // mymap.setView([latitude, longitude], 13); // 重新設定初始位置
-            // getStationData(longitude, latitude); // 將經緯度傳給 getStationData 執行
+          (position) => {
+            vm.currentPos.lng = position.coords.longitude; // 取得經度
+            vm.currentPos.lat = position.coords.latitude; // 取得緯度
+            console.log('lng:', vm.currentPos.lng, 'lat:', vm.currentPos.lat);
+            vm.getNearBikes(vm.currentPos.lng, vm.currentPos.lat);
           },
           // 錯誤訊息
-          function (e) {
-            const errCode = e.code;
+          (e) => {
             const errMsg = e.message;
-            console.error(errCode);
-            console.error(errMsg);
+            console.error('position not retrievable, error msg', errMsg);
           }
         );
       }
+    },
+    getNearBikes(lng, lat) {
+      const vm = this;
+      if (lat) {
+        const url = `https://ptx.transportdata.tw/MOTC/v2/Bike/Station/NearBy?$top=30&$spatialFilter=nearby(${lat}, ${lng}, 500)&$format=JSON`;
+        vm.axios
+          .get(url, { headers: this.getAuthorizationHeader() })
+          .then((res) => {
+            console.log('附近站點', res.data);
+            vm.nearStations = res.data;
+            // 也是一組 AJAX 函數
+            vm.getStationInfo(lng, lat);
+          })
+          .catch(() => console.error('nearby data not available'));
+      } else {
+        alert('請開啟位置分享才能查詢！');
+      }
+    },
+    getStationInfo(lng, lat) {
+      const vm = this;
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Bike/Availability/NearBy?$top=30&$spatialFilter=nearby(${lat}, ${lng}, 500)&$format=JSON`;
+      vm.axios
+        .get(url, { headers: this.getAuthorizationHeader() })
+        .then((res) => {
+          console.log('站點空位', res.data);
+          vm.stnAvailability = res.data;
+          vm.joinStnData();
+        })
+        .catch(() => console.error('stationAvailability not available'));
+    },
+    joinStnData() {
+      const vm = this;
+      vm.stnAvailability.forEach((availableStn) => {
+        vm.nearStations.forEach((nearStn) => {
+          if (availableStn.StationUID === nearStn.StationUID) {
+            availableStn.StationName = nearStn.StationName;
+            availableStn.StationPosition = nearStn.StationPosition;
+            availableStn.StationAddress = nearStn.StationAddress;
+            // availableStn.BikesCapacity = nearStn.BikesCapacity;
+            // availableStn.ServiceType = nearStn.ServiceType;
+          }
+        });
+      });
+    },
+    getPosAndNearBikes() {
+      const vm = this;
+      // 請使用者打開位置分享，取得坐標
+      // *可用 return 方式，將經緯度帶給下一組函數
+      vm.getPosition();
+      // 經緯度丟入 AJAX 的 url，取得附近腳踏車站點資訊
+      // nearStations: [{...},{...},{...}]
+      vm.getNearBikes(vm.currentPos.lng, vm.currentPos.lat);
+      // 經緯度丟入 AJAX 的 url，取得站點即時租借資訊
+      // stnAvailability: [{...},{...},{...}]
+      // 雙迴圈比對兩組陣列，將要用的資訊加到 stnAvailability (函式 joinStnData )
+      vm.getStationInfo(vm.currentPos.lng, vm.currentPos.lat);
     },
   },
   computed: {
@@ -327,6 +459,10 @@ export default {
         return city.en === vm.selectedCity;
       });
       return theCityObj.zh;
+    },
+    endIndex() {
+      const aryLength = this.checkRoute.geojson.features[0].geometry.coordinates[0].length;
+      return aryLength - 1;
     },
     // getMiddlePoint(){
     //   const aryLength = this.checkRoute.geojson.features[0].geometry.coordinates[0].length;
@@ -411,7 +547,7 @@ p {
 /* attract 通通改為 bike */
 .bike-title {
   font-size: 1.2rem;
-  margin-top: 1.8rem;
+  margin-top: 1rem;
 }
 .bike-description {
   max-width: 95%;
@@ -426,7 +562,7 @@ p {
 }
 .bike-item {
   background-color: #ffffff;
-  margin-bottom: 90px;
+  margin-bottom: 1rem;
   filter: drop-shadow(0px 4px 15px rgba(0, 0, 0, 0.2));
 }
 .detail-btn {
@@ -439,6 +575,9 @@ p {
 .detail-btn:hover {
   background-color: #08a6bb;
   color: #ffffff;
+}
+.map-container {
+  height: 100vh;
 }
 
 @keyframes bannerAnimation {

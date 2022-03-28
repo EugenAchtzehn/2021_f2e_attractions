@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div id="scroll-back" v-if="toTop > 150" @click="backToTop()">Top</div>
     <ul class="banner-sec">
       <li class="second-banner"></li>
       <li class="first-banner"></li>
@@ -18,7 +19,7 @@
               {{ city.zh }}
             </option>
           </select>
-          <button class="btn-confirm btn rounded" @click="getTDXdata"></button>
+          <button class="btn-confirm btn rounded" @click="getTDXdata(1)"></button>
         </div>
       </div>
     </ul>
@@ -43,19 +44,18 @@
             :style="{ backgroundImage: `url(${defaultImageUrl})` }"
           ></div>
           <h3 class="act-title font-weight-bold pl-3">{{ act.ActivityName }}</h3>
-          <p class="pl-3">
+          <p class="px-3 pt-3">
             <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
             <span v-if="act.StartTime">開始：{{ formatTime(act.StartTime) }}</span>
             <br />
             <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
             <span v-if="act.EndTime">結束：{{ formatTime(act.EndTime) }}</span>
           </p>
-
-          <p class="pl-3" v-if="act.Address">
+          <p class="px-3" v-if="act.Address">
             <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
             {{ act.Address }}
           </p>
-          <p class="pl-3" v-else>
+          <p class="px-3" v-else>
             <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
             {{ act.Location }}
           </p>
@@ -156,6 +156,24 @@
         </div>
       </div>
     </div>
+    <!-- pagination -->
+    <nav>
+      <ul class="pagination justify-content-center pagination-lg">
+        <li class="page-item">
+          <a class="page-link page-text" @click.prevent="pageBackward()">
+            <span>&laquo;</span>
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link page-text">{{ page.num }}</a>
+        </li>
+        <li class="page-item">
+          <a class="page-link page-text" @click.prevent="pageForward()">
+            <span>&raquo;</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
   </div>
 </template>
 <script>
@@ -220,6 +238,11 @@ export default {
         { zh: '澎湖縣', en: 'PenghuCounty' },
         { zh: '連江縣', en: 'LienchiangCounty' },
       ],
+      page: {
+        num: 1,
+        itemPerPage: 12,
+        arrayLength: '',
+      },
       acts: [],
       defaultImageUrl: `https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=300&q=80`,
       checkAct: {
@@ -237,6 +260,7 @@ export default {
         attribution: `&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors`,
         zoom: 15,
       },
+      toTop: 0,
     };
   },
   methods: {
@@ -253,7 +277,7 @@ export default {
       // let Authorization = 'hmac username=\"' + AppID + '\", algorithm=\"hmac-sha1\", headers=\"x-date\", signature=\"' + HMAC + '\"';
       return { Authorization: Auth, 'X-Date': GMTString };
     },
-    getTDXdata() {
+    getTDXdata(isSearch) {
       const vm = this;
       let city = vm.selectedCity;
       if (city === 'all') {
@@ -268,16 +292,35 @@ export default {
       } else {
         activityType = `$filter=Class1 eq '${activityType}' or Class2 eq '${activityType}'&`;
       }
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Activity${city}?${activityType}$top=12&$format=JSON`;
-      console.log('請求URL：', url);
+      let itemPerPage = vm.page.itemPerPage;
+      if (isSearch) {
+        vm.page.num = 1;
+      }
+      let skipNum = (vm.page.num - 1) * itemPerPage;
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Activity${city}?${activityType}$top=${itemPerPage}&$skip=${skipNum}&$format=JSON`;
+      // console.log('請求URL：', url);
       vm.axios
         .get(url, { headers: this.getAuthorizationHeader() })
         .then((response) => {
           // console.log(response);
           vm.acts = response.data;
         })
+        .then(vm.getArrayLength(city, activityType))
         .catch(() => {
           console.log('failed');
+        });
+    },
+    getArrayLength(city, activityType) {
+      const vm = this;
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Tourism/Activity${city}?${activityType}$select=ActivityID&$format=JSON`;
+      vm.axios
+        .get(url, { headers: this.getAuthorizationHeader() })
+        .then((res) => {
+          // console.log('陣列總長度', res.data.length);
+          vm.page.arrayLength = res.data.length;
+        })
+        .catch(() => {
+          console.error('陣列長度查詢失敗');
         });
     },
     formatTime(inputTime) {
@@ -307,6 +350,27 @@ export default {
         this.$refs.actMap.mapObject.invalidateSize();
       }, 200);
     },
+    pageBackward() {
+      const vm = this;
+      if (vm.page.num > 1) {
+        vm.page.num -= 1;
+        vm.getTDXdata();
+      }
+    },
+    pageForward() {
+      const vm = this;
+      if (vm.page.num < Math.ceil(vm.page.arrayLength / vm.page.itemPerPage)) {
+        vm.page.num += 1;
+        vm.getTDXdata();
+      }
+    },
+    backToTop() {
+      document.documentElement.scrollTop = 0;
+    },
+    detectScroll() {
+      const vm = this;
+      vm.toTop = document.documentElement.scrollTop;
+    },
   },
   computed: {
     currentCounty() {
@@ -324,11 +388,32 @@ export default {
   },
   created() {
     this.getTDXdata();
+    window.addEventListener('scroll', this.detectScroll);
+  },
+  destroyed() {
+    window.removeEventListener('scroll', this.detectScroll);
   },
 };
 </script>
 
 <style scoped>
+#scroll-back {
+  color: #08a6bb;
+  padding: 0.5rem 1rem;
+  border: 3px solid #08a6bb;
+  border-radius: 0.2rem;
+  background-color: #ffffff;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  right: 3.5rem;
+  bottom: 3.5rem;
+  cursor: pointer;
+  z-index: 99;
+}
+#scroll-back:hover {
+  color: #ffffff;
+  background-color: #08a6bb;
+}
 .banner-sec {
   height: 600px;
   position: relative;
@@ -458,6 +543,12 @@ p {
 }
 .other-class {
   padding: 1.5rem;
+}
+.pagination li {
+  cursor: pointer;
+}
+.page-text {
+  color: #08a6bb;
 }
 @keyframes bannerAnimation {
   0% {

@@ -1,5 +1,6 @@
 <template>
   <div>
+    <div id="scroll-back" v-if="toTop > 150" @click="backToTop()">Top</div>
     <ul class="banner-sec">
       <li class="second-banner"></li>
       <li class="first-banner"></li>
@@ -12,7 +13,7 @@
               {{ city.zh }}
             </option>
           </select>
-          <button class="btn-confirm btn rounded" @click="getTDXdata"></button>
+          <button class="btn-confirm btn rounded" @click="getTDXdata(1)"></button>
         </div>
       </div>
     </ul>
@@ -26,46 +27,60 @@
       </p>
     </div>
     <div class="bike-sec row">
-      <div class="col-5 col-sm-4">
-        <div class="bike-item rounded py-3" v-for="(item, index) in routes" :key="item.ID">
-          <h3 class="bike-title font-weight-bold pl-3">
-            {{ item.RouteName }}
-          </h3>
-          <!-- <p class="px-3 pt-3" v-if="item.OpenTime">
+      <div class="col-4">
+        <div class="route-container">
+          <div class="bike-item rounded py-3" v-for="(item, index) in routes" :key="item.ID">
+            <h3 class="bike-title font-weight-bold pl-3">
+              {{ item.RouteName }}
+            </h3>
+            <!-- <p class="px-3 pt-3" v-if="item.OpenTime">
             <img class="clock" src="@/assets/clock.png" alt="clock" />
             {{ item.OpenTime }}
           </p> -->
-          <p class="px-3">
-            <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-            起點：{{ item.RoadSectionStart || '無提供' }}
-          </p>
-          <p class="px-3">
-            <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-            終點：{{ item.RoadSectionEnd || '無提供' }}
-          </p>
-          <div class="d-flex justify-content-center align-items-center">
-            <button
-              type="button"
-              class="detail-btn btn w-50 text-center py-1"
-              @click="
-                getRouteDetails(index);
-                getMapSize();
-              "
-              data-toggle="modal"
-              data-target="#bikeModal"
-            >
-              了解更多
-            </button>
+            <p class="pl-3">
+              <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
+              起點：{{ item.RoadSectionStart || '無提供' }}
+              <br />
+              <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
+              終點：{{ item.RoadSectionEnd || '無提供' }}
+            </p>
+            <div class="d-flex justify-content-center align-items-center">
+              <button
+                type="button"
+                class="detail-btn btn w-75 text-center py-1"
+                @click="
+                  getRouteDetails(index);
+                  getMapSize();
+                "
+                data-toggle="modal"
+                data-target="#bikeModal"
+              >
+                More
+              </button>
+            </div>
           </div>
         </div>
+        <!-- pagination -->
+        <nav class="mt-3">
+          <ul class="pagination justify-content-center">
+            <li class="page-item">
+              <a class="page-link page-text" @click.prevent="pageBackward()">
+                <span>&laquo;</span>
+              </a>
+            </li>
+            <li class="page-item">
+              <a class="page-link page-text">{{ page.num }}</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link page-text" @click.prevent="pageForward()">
+                <span>&raquo;</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
       </div>
-      <div class="col-7 col-sm-8 map-container">
-        <l-map
-          :zoom="16"
-          :center="[currentPos.lat, currentPos.lng]"
-          class="mb-5"
-          style="height: 450px"
-        >
+      <div class="col-8 map-container">
+        <l-map :zoom="16" :center="[currentPos.lat, currentPos.lng]" class="mb-3">
           <l-tile-layer :url="maps.url" :attribution="maps.attribution"></l-tile-layer>
           <l-marker :lat-lng="[currentPos.lat, currentPos.lng]">
             <l-icon :icon-url="icon.positionUrl" :icon-size="[32, 32]"></l-icon>
@@ -83,24 +98,16 @@
           >
             <l-icon :icon-url="icon.bikeUrl" :icon-size="[40, 40]" />
             <l-popup>
-              <p>站名：{{ stnAvailability[index].StationName.Zh_tw }}</p>
-              <p>地址：{{ stnAvailability[index].StationAddress.Zh_tw }}</p>
-              <p>可借車數：{{ stnAvailability[index].AvailableRentBikes }}</p>
-              <p>可還空位：{{ stnAvailability[index].AvailableReturnBikes }}</p>
+              <div class="mb-1">站名：{{ stnAvailability[index].StationName.Zh_tw }}</div>
+              <div class="mb-1">地址：{{ stnAvailability[index].StationAddress.Zh_tw }}</div>
+              <div class="mb-1">可借車數：{{ stnAvailability[index].AvailableRentBikes }}</div>
+              <div class="mb-1">可還空位：{{ stnAvailability[index].AvailableReturnBikes }}</div>
             </l-popup>
           </l-marker>
           <!-- <l-geo-json :geojson="geoJsonExample"></l-geo-json> -->
         </l-map>
+
         <button @click="getPosAndNearBikes" class="btn btn-primary">取得當下位置</button>
-        <!-- <button @click="getNearBikes(currentPos.lng, currentPos.lat)" class="btn btn-primary ml-3">
-          取得附近站位
-        </button>
-        <button
-          @click="getStationInfo(currentPos.lng, currentPos.lat)"
-          class="btn btn-primary ml-3"
-        >
-          取得站位資料
-        </button> -->
       </div>
     </div>
 
@@ -262,6 +269,11 @@ export default {
         { zh: '金門縣', en: 'KinmenCounty' },
         { zh: '澎湖縣', en: 'PenghuCounty' },
       ],
+      page: {
+        num: 1,
+        itemPerPage: 8,
+        arrayLength: '',
+      },
       routes: [],
       checkRoute: {
         geojson: {
@@ -318,6 +330,7 @@ export default {
         attribution: `&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors`,
         zoom: 14,
       },
+      toTop: 0,
     };
   },
   methods: {
@@ -334,18 +347,53 @@ export default {
       // let Authorization = 'hmac username=\"' + AppID + '\", algorithm=\"hmac-sha1\", headers=\"x-date\", signature=\"' + HMAC + '\"';
       return { Authorization: Auth, 'X-Date': GMTString };
     },
-    getTDXdata() {
+    getTDXdata(isSearch) {
       const vm = this;
       let city = vm.selectedCity;
       // console.log('City: ', city);
-      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${city}?$top=10&$format=JSON`;
+      let itemPerPage = vm.page.itemPerPage;
+      if (isSearch) {
+        vm.page.num = 1;
+      }
+      let skipNum = (vm.page.num - 1) * itemPerPage;
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${city}?$top=${itemPerPage}&$skip=${skipNum}&$format=JSON`;
       vm.axios
         .get(url, { headers: this.getAuthorizationHeader() })
         .then((res) => {
           // console.log(res.data);
           vm.routes = res.data;
         })
+        .then(vm.getArrayLength(city))
         .catch(() => console.error('cannot get TDX data'));
+    },
+    getArrayLength(city) {
+      const vm = this;
+      const url = `https://ptx.transportdata.tw/MOTC/v2/Cycling/Shape/${city}?$select=RouteName&$format=JSON`;
+      vm.axios
+        .get(url, { headers: this.getAuthorizationHeader() })
+        .then((res) => {
+          console.log(`${city}陣列總長度`, res.data.length);
+          vm.page.arrayLength = res.data.length;
+        })
+        .catch(() => {
+          console.error('陣列長度查詢失敗');
+        });
+    },
+    pageForward() {
+      const vm = this;
+      // 非最後一頁時加 1
+      if (vm.page.num < Math.ceil(vm.page.arrayLength / vm.page.itemPerPage)) {
+        vm.page.num += 1;
+        vm.getTDXdata();
+      }
+    },
+    pageBackward() {
+      const vm = this;
+      // 非第一頁時減 1
+      if (vm.page.num > 1) {
+        vm.page.num -= 1;
+        vm.getTDXdata();
+      }
     },
     getRouteDetails(index) {
       const vm = this;
@@ -403,9 +451,9 @@ export default {
           .then((res) => {
             console.log('附近站點', res.data);
             vm.nearStations = res.data;
-            // 也是一組 AJAX 函數
-            vm.getStationInfo(lng, lat);
           })
+          // 另一組 AJAX 函數
+          .then(vm.getStationInfo(lng, lat))
           .catch(() => console.error('nearby data not available'));
       } else {
         alert('請開啟位置分享才能查詢！');
@@ -448,7 +496,14 @@ export default {
       // 經緯度丟入 AJAX 的 url，取得站點即時租借資訊
       // stnAvailability: [{...},{...},{...}]
       // 雙迴圈比對兩組陣列，將要用的資訊加到 stnAvailability (函式 joinStnData )
-      vm.getStationInfo(vm.currentPos.lng, vm.currentPos.lat);
+      // vm.getStationInfo(vm.currentPos.lng, vm.currentPos.lat);
+    },
+    backToTop() {
+      document.documentElement.scrollTop = 0;
+    },
+    detectScroll() {
+      const vm = this;
+      vm.toTop = document.documentElement.scrollTop;
     },
   },
   computed: {
@@ -471,10 +526,31 @@ export default {
   },
   created() {
     this.getTDXdata();
+    window.addEventListener('scroll', this.detectScroll);
+  },
+  destroyed() {
+    window.removeEventListener('scroll', this.detectScroll);
   },
 };
 </script>
 <style scoped>
+#scroll-back {
+  color: #08a6bb;
+  padding: 0.5rem 1rem;
+  border: 3px solid #08a6bb;
+  border-radius: 0.2rem;
+  background-color: #ffffff;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
+  position: fixed;
+  right: 3.5rem;
+  bottom: 3.5rem;
+  cursor: pointer;
+  z-index: 999;
+}
+#scroll-back:hover {
+  color: #ffffff;
+  background-color: #08a6bb;
+}
 .banner-sec {
   height: 600px;
   position: relative;
@@ -547,7 +623,7 @@ p {
 /* attract 通通改為 bike */
 .bike-title {
   font-size: 1.2rem;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 .bike-description {
   max-width: 95%;
@@ -560,10 +636,14 @@ p {
   margin-left: auto;
   margin-right: auto;
 }
+.route-container {
+  overflow-y: scroll;
+  height: 100vh;
+}
 .bike-item {
   background-color: #ffffff;
-  margin-bottom: 1rem;
-  filter: drop-shadow(0px 4px 15px rgba(0, 0, 0, 0.2));
+  margin: 0.5rem;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
 }
 .detail-btn {
   color: #08a6bb;
@@ -576,8 +656,15 @@ p {
   background-color: #08a6bb;
   color: #ffffff;
 }
+.pagination li {
+  cursor: pointer;
+}
+.page-text {
+  color: #08a6bb;
+}
 .map-container {
   height: 100vh;
+  margin-bottom: 20vh;
 }
 
 @keyframes bannerAnimation {

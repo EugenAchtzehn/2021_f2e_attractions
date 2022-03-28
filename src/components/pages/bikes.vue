@@ -30,20 +30,28 @@
       <div class="col-4">
         <div class="route-container">
           <div class="bike-item rounded py-3" v-for="(item, index) in routes" :key="item.ID">
-            <h3 class="bike-title font-weight-bold pl-3">
-              {{ item.RouteName }}
-            </h3>
-            <!-- <p class="px-3 pt-3" v-if="item.OpenTime">
-            <img class="clock" src="@/assets/clock.png" alt="clock" />
-            {{ item.OpenTime }}
-          </p> -->
-            <p class="pl-3">
-              <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-              起點：{{ item.RoadSectionStart || '無提供' }}
-              <br />
-              <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-              終點：{{ item.RoadSectionEnd || '無提供' }}
-            </p>
+            <div class="d-flex align-items-center">
+              <h3 class="bike-title font-weight-bold pl-3 mb-0">
+                {{ item.RouteName }}
+              </h3>
+              <p class="direction-text mt-3 mr-3 ml-auto text-center">
+                {{ item.Direction || '無提供' }}
+              </p>
+            </div>
+            <hr />
+            <div class="d-flex align-items-center">
+              <p class="pl-3">
+                <img class="map-pin" src="@/assets/start.png" alt="map pin" />
+                <span class="road-text ml-2">{{ item.RoadSectionStart || '無提供' }}</span>
+                <br />
+                <img class="map-pin mt-2" src="@/assets/end.png" alt="map pin" />
+                <span class="road-text ml-2">{{ item.RoadSectionEnd || '無提供' }}</span>
+              </p>
+              <p class="ml-auto pr-3 text-center">
+                <span class="road-length d-block text">全長</span>
+                <span class="length">{{ item.CyclingLength / 1000 || '無提供' }} 公里</span>
+              </p>
+            </div>
             <div class="d-flex justify-content-center align-items-center">
               <button
                 type="button"
@@ -107,7 +115,9 @@
           <!-- <l-geo-json :geojson="geoJsonExample"></l-geo-json> -->
         </l-map>
 
-        <button @click="getPosAndNearBikes" class="btn get-pos-btn">取得當下位置</button>
+        <button @click="getPosAndNearBikes" class="btn get-pos-btn mx-auto d-block">
+          取得當下位置
+        </button>
       </div>
     </div>
 
@@ -616,14 +626,36 @@ p {
   height: 1rem;
 } */
 .map-pin {
-  height: 16px;
+  height: 1.5rem;
   display: inline-block;
   padding-bottom: 3px;
 }
+.road-text {
+  line-height: 1.5rem;
+  vertical-align: bottom;
+}
+.road-length {
+  font-size: 0.75rem;
+  color: #949494;
+}
+.length {
+  color: #007f77;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
 /* attract 通通改為 bike */
+.direction-text {
+  padding: 3px 6px;
+  height: 1.5rem;
+  width: 3rem;
+  font-size: 0.75rem;
+  color: #949494;
+  background-color: #f3f3f3;
+  border-radius: 0.5rem;
+}
 .bike-title {
   font-size: 1.2rem;
-  margin-top: 0.5rem;
+  width: 80%;
 }
 .bike-description {
   max-width: 95%;

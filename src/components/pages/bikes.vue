@@ -107,7 +107,7 @@
           <!-- <l-geo-json :geojson="geoJsonExample"></l-geo-json> -->
         </l-map>
 
-        <button @click="getPosAndNearBikes" class="btn btn-primary">取得當下位置</button>
+        <button @click="getPosAndNearBikes" class="btn get-pos-btn">取得當下位置</button>
       </div>
     </div>
 
@@ -665,6 +665,16 @@ p {
 .map-container {
   height: 100vh;
   margin-bottom: 20vh;
+}
+.get-pos-btn {
+  border: 3px solid #08a6bb;
+  color: #08a6bb;
+  background-color: #ffffff;
+  font-weight: 700;
+}
+.get-pos-btn:hover {
+  color: #ffffff;
+  background-color: #08a6bb;
 }
 
 @keyframes bannerAnimation {

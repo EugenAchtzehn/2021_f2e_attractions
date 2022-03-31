@@ -35,7 +35,7 @@
         台灣的各個美景，都美不勝收。<br />等你一同來發現這座寶島的奧妙！
       </p>
     </div>
-    <div class="attract-sec row">
+    <div class="attract-sec row" v-if="attractions.length > 0">
       <div class="col-12 col-sm-3" v-for="(item, index) in attractions" :key="item.ID">
         <div class="attract-item rounded pb-3">
           <div
@@ -49,7 +49,7 @@
             class="attract-img rounded-top"
             :style="{ backgroundImage: `url(${defaultImageUrl})` }"
           ></div>
-          <h3 class="attract-title font-weight-bold pl-3">
+          <h3 class="attract-title font-weight-bold px-3">
             {{ item.ScenicSpotName }}
           </h3>
           <p class="px-3 pt-3" v-if="item.OpenTime">
@@ -78,6 +78,15 @@
               了解更多
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="attract-sec row" v-else>
+      <div class="col-12">
+        <div class="attract-item rounded pb-3">
+          <h3 class="attract-title font-weight-bold p-3 pt-5 text-center">
+            此條件無符合項目，請重新查詢
+          </h3>
         </div>
       </div>
     </div>

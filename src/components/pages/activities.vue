@@ -29,7 +29,7 @@
         台灣的各個美景，都美不勝收。<br />等你一同來發現這座寶島的奧妙！
       </p>
     </div>
-    <div class="act-sec row">
+    <div class="act-sec row" v-if="acts.length > 1">
       <div class="col-12 col-sm-3" v-for="(act, index) in acts" :key="act.ActivityID">
         <div class="act-item rounded pb-3">
           <div
@@ -43,7 +43,7 @@
             class="act-img rounded-top"
             :style="{ backgroundImage: `url(${defaultImageUrl})` }"
           ></div>
-          <h3 class="act-title font-weight-bold pl-3">{{ act.ActivityName }}</h3>
+          <h3 class="act-title font-weight-bold px-3">{{ act.ActivityName }}</h3>
           <p class="px-3 pt-3">
             <img class="clock pr-2" src="@/assets/clock.png" alt="clock" />
             <span v-if="act.StartTime">開始：{{ formatTime(act.StartTime) }}</span>
@@ -73,6 +73,15 @@
               了解更多
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+    <div class="act-sec row" v-else>
+      <div class="col-12">
+        <div class="act-item rounded pb-3">
+          <h3 class="act-title font-weight-bold p-3 pt-5 text-center">
+            此條件無符合項目，請重新查詢
+          </h3>
         </div>
       </div>
     </div>
@@ -211,7 +220,7 @@ export default {
         '自行車活動',
         '產業文化活動',
         '活動快報',
-        '其他',
+        // '其他',
       ],
       cities: [
         { zh: '所有縣市', en: 'all' },

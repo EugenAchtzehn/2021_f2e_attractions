@@ -7,13 +7,18 @@
       <div class="banner-func">
         <h1 class="banner-title">Welcome to Travel Taiwan</h1>
         <div class="select-sec d-sm-flex justify-content-center align-items-center">
-          <select class="rounded" name="selectCity" id="selectCity" v-model="selectedCity">
+          <select
+            class="rounded"
+            name="selectCity"
+            id="selectCity"
+            v-model="selectedCity"
+            @change="getTDXdata(1)"
+          >
             <option value="" disabled>請選擇縣市</option>
             <option :value="city.en" v-for="city in cities" :key="city.zh">
               {{ city.zh }}
             </option>
           </select>
-          <button class="btn-confirm btn rounded" @click="getTDXdata(1)"></button>
         </div>
       </div>
     </ul>
@@ -29,7 +34,13 @@
     <div class="bike-sec row">
       <div class="col-4">
         <div class="route-container">
-          <div class="bike-item rounded py-3" v-for="(item, index) in routes" :key="item.ID">
+          <!-- getMapSize(); 用 modal 時需加入的掛載方法 -->
+          <div
+            class="bike-item rounded py-3"
+            v-for="(item, index) in routes"
+            :key="item.ID"
+            @click.prevent="getRouteDetails(index)"
+          >
             <div class="d-flex align-items-center">
               <h3 class="bike-title font-weight-bold pl-3 mb-0">
                 {{ item.RouteName }}
@@ -48,11 +59,11 @@
                 <span class="road-text ml-2">{{ item.RoadSectionEnd || '無提供' }}</span>
               </p>
               <p class="ml-auto pr-3 text-center">
-                <span class="road-length d-block text">全長</span>
+                <span class="road-length d-block">全長</span>
                 <span class="length">{{ item.CyclingLength / 1000 || '無提供' }} 公里</span>
               </p>
             </div>
-            <div class="d-flex justify-content-center align-items-center">
+            <!-- <div class="d-flex justify-content-center align-items-center">
               <button
                 type="button"
                 class="detail-btn btn w-75 text-center py-1"
@@ -65,7 +76,7 @@
               >
                 More
               </button>
-            </div>
+            </div> -->
           </div>
         </div>
         <!-- pagination -->
@@ -89,13 +100,16 @@
       </div>
       <div class="col-8 map-container">
         <l-map :zoom="16" :center="[currentPos.lat, currentPos.lng]" class="mb-3">
+          <!-- 底圖圖磚 -->
           <l-tile-layer :url="maps.url" :attribution="maps.attribution"></l-tile-layer>
+          <!-- 目前位置 -->
           <l-marker :lat-lng="[currentPos.lat, currentPos.lng]">
             <l-icon :icon-url="icon.positionUrl" :icon-size="[32, 32]"></l-icon>
             <l-popup>
               <p>目前位置</p>
             </l-popup>
           </l-marker>
+          <!-- 附近站點 -->
           <l-marker
             v-for="(stn, index) in stnAvailability"
             :key="stn.StationUID"
@@ -112,6 +126,26 @@
               <div class="mb-1">可還空位：{{ stnAvailability[index].AvailableReturnBikes }}</div>
             </l-popup>
           </l-marker>
+          <!-- 起點 -->
+          <l-marker
+            :lat-lng="[
+              checkRoute.geojson.features[0].geometry.coordinates[0][0][1],
+              checkRoute.geojson.features[0].geometry.coordinates[0][0][0],
+            ]"
+          >
+            <l-icon :icon-url="icon.startUrl" :icon-size="icon.iconSize"></l-icon>
+          </l-marker>
+          <!-- 終點 -->
+          <l-marker
+            :lat-lng="[
+              checkRoute.geojson.features[0].geometry.coordinates[0][endIndex][1],
+              checkRoute.geojson.features[0].geometry.coordinates[0][endIndex][0],
+            ]"
+          >
+            <l-icon :icon-url="icon.endUrl" :icon-size="icon.iconSize"></l-icon>
+          </l-marker>
+          <!-- 路線 -->
+          <l-geo-json :geojson="checkRoute.geojson" :options-style="lineStyle"></l-geo-json>
           <!-- <l-geo-json :geojson="geoJsonExample"></l-geo-json> -->
         </l-map>
 
@@ -122,7 +156,7 @@
     </div>
 
     <!-- the Modal component made by Bootstrap 4 -->
-    <div class="modal fade" id="bikeModal" tabindex="-1" role="dialog">
+    <!-- <div class="modal fade" id="bikeModal" tabindex="-1" role="dialog">
       <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
         <div class="modal-content">
           <div class="modal-header px-5">
@@ -134,17 +168,6 @@
             </button>
           </div>
           <div class="modal-body px-5">
-            <!-- <p class="modal-address" v-if="checkAct.Address">
-              <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-              {{ checkAct.Address }}
-            </p>
-            <p class="modal-address" v-else>
-              <img class="map-pin" src="@/assets/map-pin.png" alt="map pin" />
-              {{ checkAct.Location }}
-            </p> -->
-            <!-- <p class="modal-text">
-              {{ checkRoute.Description }}
-            </p> -->
             <l-map
               :zoom="16"
               :center="[
@@ -174,36 +197,10 @@
               </l-marker>
               <l-geo-json :geojson="checkRoute.geojson" :options-style="lineStyle"></l-geo-json>
             </l-map>
-            <div class="row pb-4 modal-btm-info">
-              <!-- 因資料內容可能不完整，四欄資訊都加上 v-if，確保有資料才顯示 -->
-              <div class="col" v-if="checkRoute.StartTime">
-                <img src="@/assets/open-time.png" alt="start-time" />
-                活動開始： <br />
-                {{ formatTime(checkRoute.StartTime) }}
-              </div>
-              <div class="col" v-if="checkRoute.EndTime">
-                <img src="@/assets/open-time.png" alt="end-time" />
-                活動結束：<br />
-                {{ formatTime(checkRoute.EndTime) }}
-              </div>
-              <div class="col" v-if="checkRoute.Phone">
-                <img src="@/assets/phone.png" alt="phone" />
-                <!-- 消除電話都是 886- 國際碼起頭的狀況 -->
-                {{ '0' + checkRoute.Phone.substring(4) }}
-              </div>
-              <div class="col" v-if="checkRoute.Class1">
-                <img src="@/assets/category.png" alt="category" />
-                {{ checkRoute.Class1 }}
-                <br />
-                <span class="other-class">
-                  {{ checkRoute.Class2 }}
-                </span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
-    </div>
+    </div> -->
   </div>
 </template>
 <script>
@@ -421,12 +418,17 @@ export default {
       // 呼叫 convertWkt() 函數會得到 geometry 轉成 GeoJSON 的回傳，並將其放到 checkRoute 中等待顯示
       vm.checkRoute.geojson.features[0].geometry = vm.convertWkt(vm.checkRoute.Geometry);
       console.log('vm.checkRoute.geojson: ', vm.checkRoute.geojson);
+      // 地圖中心移到路線起點
+      vm.currentPos = {
+        lat: vm.checkRoute.geojson.features[0].geometry.coordinates[0][0][1],
+        lng: vm.checkRoute.geojson.features[0].geometry.coordinates[0][0][0],
+      };
     },
-    getMapSize() {
-      setTimeout(() => {
-        this.$refs.bikeMap.mapObject.invalidateSize();
-      }, 200);
-    },
+    // getMapSize() {
+    //   setTimeout(() => {
+    //     this.$refs.bikeMap.mapObject.invalidateSize();
+    //   }, 200);
+    // },
     convertWkt(geometry) {
       const wkt = new wicket.Wkt();
       // 需要先讀入 WKT 到 wkt，再轉成 JSON 的程序
@@ -536,6 +538,7 @@ export default {
   },
   created() {
     this.getTDXdata();
+    // this.getPosAndNearBikes();
     window.addEventListener('scroll', this.detectScroll);
   },
   destroyed() {
@@ -607,13 +610,6 @@ export default {
   text-align: center;
   margin-right: 1.2rem;
 }
-.btn-confirm {
-  background-image: url('~@/assets/bx-search.png');
-  background-position: center;
-  background-size: cover;
-  height: 42px;
-  width: 42px;
-}
 h2 {
   font-size: 1.875rem;
   color: #08a6bb;
@@ -636,7 +632,6 @@ p {
 }
 .road-length {
   font-size: 0.75rem;
-  color: #949494;
 }
 .length {
   color: #007f77;
@@ -670,12 +665,22 @@ p {
 }
 .route-container {
   overflow-y: scroll;
-  height: 100vh;
+  height: 80vh;
 }
 .bike-item {
   background-color: #ffffff;
   margin: 0.5rem;
   filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.2));
+  cursor: pointer;
+}
+.bike-item:hover {
+  background-color: rgba(250, 250, 250, 0.9);
+}
+.bike-item:hover p {
+  color: #2b2b2b;
+}
+.bike-item:hover .direction-text {
+  background-color: #e6e6e6;
 }
 .detail-btn {
   color: #08a6bb;
@@ -695,7 +700,7 @@ p {
   color: #08a6bb;
 }
 .map-container {
-  height: 100vh;
+  height: 80vh;
   margin-bottom: 20vh;
 }
 .get-pos-btn {

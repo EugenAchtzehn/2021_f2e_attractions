@@ -32,7 +32,7 @@
       </p>
     </div>
     <div class="bike-sec row">
-      <div class="col-4">
+      <div class="col-12 col-sm-4">
         <div class="route-container">
           <!-- getMapSize(); 用 modal 時需加入的掛載方法 -->
           <div
@@ -98,7 +98,7 @@
           </ul>
         </nav>
       </div>
-      <div class="col-8 map-container">
+      <div class="col-12 col-sm-8 map-container">
         <l-map :zoom="16" :center="[currentPos.lat, currentPos.lng]" class="mb-3">
           <!-- 底圖圖磚 -->
           <l-tile-layer :url="maps.url" :attribution="maps.attribution"></l-tile-layer>
@@ -149,8 +149,8 @@
           <!-- <l-geo-json :geojson="geoJsonExample"></l-geo-json> -->
         </l-map>
 
-        <button @click="getPosAndNearBikes" class="btn get-pos-btn mx-auto d-block">
-          取得當下位置
+        <button @click="getPosAndNearBikes" class="btn-lg get-pos-btn mx-auto d-block">
+          我的位置
         </button>
       </div>
     </div>
@@ -499,12 +499,15 @@ export default {
     },
     getPosAndNearBikes() {
       const vm = this;
+
       // 請使用者打開位置分享，取得坐標
       // *可用 return 方式，將經緯度帶給下一組函數
       vm.getPosition();
+
       // 經緯度丟入 AJAX 的 url，取得附近腳踏車站點資訊
       // nearStations: [{...},{...},{...}]
-      vm.getNearBikes(vm.currentPos.lng, vm.currentPos.lat);
+      // vm.getNearBikes(vm.currentPos.lng, vm.currentPos.lat);
+
       // 經緯度丟入 AJAX 的 url，取得站點即時租借資訊
       // stnAvailability: [{...},{...},{...}]
       // 雙迴圈比對兩組陣列，將要用的資訊加到 stnAvailability (函式 joinStnData )
@@ -548,17 +551,18 @@ export default {
 </script>
 <style scoped>
 #scroll-back {
+  font-size: 0.8rem;
   color: #08a6bb;
-  padding: 0.5rem 1rem;
+  padding: 0.5rem;
   border: 3px solid #08a6bb;
   border-radius: 0.2rem;
   background-color: #ffffff;
   box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2);
   position: fixed;
-  right: 3.5rem;
-  bottom: 3.5rem;
+  right: 2.5rem;
+  bottom: 2.5rem;
   cursor: pointer;
-  z-index: 999;
+  z-index: 9999;
 }
 #scroll-back:hover {
   color: #ffffff;
@@ -702,12 +706,17 @@ p {
 .map-container {
   height: 80vh;
   margin-bottom: 20vh;
+  position: relative;
 }
 .get-pos-btn {
   border: 3px solid #08a6bb;
   color: #08a6bb;
   background-color: #ffffff;
   font-weight: 700;
+  position: absolute;
+  top: 10px;
+  right: 30px;
+  z-index: 999;
 }
 .get-pos-btn:hover {
   color: #ffffff;

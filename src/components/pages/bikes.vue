@@ -449,7 +449,7 @@ export default {
           // 錯誤訊息
           (e) => {
             const errMsg = e.message;
-            console.error('position not retrievable, error msg', errMsg);
+            console.error('geolocation not available', errMsg);
           }
         );
       }
